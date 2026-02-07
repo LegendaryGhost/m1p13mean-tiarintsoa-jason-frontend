@@ -8,6 +8,6 @@ import { Component } from '@angular/core';
 class AdminHomeComponent {}
 
 export const ADMIN_ROUTES: Routes = [
-  { path: '', component: AdminHomeComponent }
+  { path: 'admin', component: AdminHomeComponent }
 ];
 export default ADMIN_ROUTES;

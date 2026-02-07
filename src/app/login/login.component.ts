@@ -155,7 +155,6 @@ export class LoginComponent {
     }).subscribe({
       next: () => {
         this.isLoading.set(false);
-        console.log('Login successful');
       },
       error: (err) => {
         this.isLoading.set(false);

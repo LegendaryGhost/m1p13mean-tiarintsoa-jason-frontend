@@ -54,7 +54,21 @@ export class AuthService {
       localStorage.setItem('mall_user', JSON.stringify(user));
     }
     this.currentUser.set(user);
-    this.router.navigate(['/']);
+    
+    // Redirect based on user role
+    switch (user.role) {
+      case 'admin':
+        this.router.navigate(['/admin']);
+        break;
+      case 'boutique':
+        this.router.navigate(['/boutique/dashboard']);
+        break;
+      case 'acheteur':
+        this.router.navigate(['/plan']);
+        break;
+      default:
+        this.router.navigate(['/']);
+    }
   }
 
   logout() {
