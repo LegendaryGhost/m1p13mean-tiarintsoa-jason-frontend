@@ -4,7 +4,7 @@ import { LoginComponent } from './login/login.component';
 import { InteractiveMapComponent } from './features/buyer/interactive-map/interactive-map.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  { path: '', component: LoginComponent },
   {
     path: 'admin',
     canActivate: [authGuard],

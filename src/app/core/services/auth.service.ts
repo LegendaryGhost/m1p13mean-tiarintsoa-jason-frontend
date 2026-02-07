@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs';
@@ -13,6 +14,7 @@ interface UserCredentials {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
   private apiUrl = 'http://localhost:3000/api/auth';
 
   // Using Signals for synchronous access to auth state across the app
@@ -30,25 +32,35 @@ export class AuthService {
   }
 
   private handleAuth(token: string, user: User) {
-    localStorage.setItem('mall_token', token);
-    localStorage.setItem('mall_user', JSON.stringify(user));
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('mall_token', token);
+      localStorage.setItem('mall_user', JSON.stringify(user));
+    }
     this.currentUser.set(user);
     this.router.navigate(['/']);
   }
 
   logout() {
-    localStorage.removeItem('mall_token');
-    localStorage.removeItem('mall_user');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('mall_token');
+      localStorage.removeItem('mall_user');
+    }
     this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
   private getUserFromStorage(): User | null {
-    const user = localStorage.getItem('mall_user');
-    return user ? JSON.parse(user) : null;
+    if (isPlatformBrowser(this.platformId)) {
+      const user = localStorage.getItem('mall_user');
+      return user ? JSON.parse(user) : null;
+    }
+    return null;
   }
 
   getToken() {
-    return localStorage.getItem('mall_token');
+    if (isPlatformBrowser(this.platformId)) {
+      return localStorage.getItem('mall_token');
+    }
+    return null;
   }
 }
