@@ -10,6 +10,14 @@ interface UserCredentials {
   password: string;
 }
 
+interface RegisterData {
+  email: string;
+  password: string;
+  role: 'admin' | 'boutique' | 'acheteur';
+  nom: string;
+  prenom: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -25,6 +33,15 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => {
         // Your backend uses a 'res.success' wrapper, extract the data accordingly
+        const { token, user } = res.data;
+        this.handleAuth(token, user);
+      })
+    );
+  }
+
+  register(data: RegisterData) {
+    return this.http.post<any>(`${this.apiUrl}/register`, data).pipe(
+      tap(res => {
         const { token, user } = res.data;
         this.handleAuth(token, user);
       })
