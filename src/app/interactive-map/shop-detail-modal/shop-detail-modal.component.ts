@@ -30,7 +30,7 @@ import { CategorieService } from '../../core/services/categorie.service';
             <div class="shop-title">
               <h2>{{ shop.nom }}</h2>
               @if (categorie(); as cat) {
-                <p-tag [value]="cat.nom" [style]="{ 'background-color': cat.couleur }"></p-tag>
+                <p-tag [value]="cat.nom" [style]="{ 'background-color': cat.couleur, 'color': 'white' }"></p-tag>
               }
             </div>
           </div>
