@@ -1,1 +1,92 @@
 /* You can add global styles to this file, and also import other style files */
+
+// Import Inter font from Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+// Global CSS Variables
+:root {
+  // Colors
+  --primary-color: #1976D2;
+  --primary-dark: #1565C0;
+  --primary-light: #BBDEFB;
+  --secondary-color: #FF6F00;
+  --secondary-dark: #E65100;
+  --secondary-light: #FFE0B2;
+  --accent-color: #00ACC1;
+  --accent-dark: #00838F;
+  --accent-light: #B2EBF2;
+  --success-color: #4CAF50;
+  --error-color: #F44336;
+  --warning-color: #FF9800;
+  --info-color: #2196F3;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F7FA;
+  --bg-tertiary: #E8EBF0;
+  --text-primary: #212121;
+  --text-secondary: #616161;
+  --text-disabled: #9E9E9E;
+  --border-color: #E0E0E0;
+
+  // Typography
+  --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-monospace: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+// Global Styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: 0.5em;
+}
+
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; font-weight: 500; }
+h6 { font-size: 0.875rem; font-weight: 500; }
+
+p {
+  margin-bottom: 1em;
+}
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--accent-dark);
+  }
+}
+
+code, pre {
+  font-family: var(--font-monospace);
+}
+
+button, input, select, textarea {
+  font-family: var(--font-family);
+}
