@@ -1,6 +1,12 @@
 
 You are an expert in TypeScript, Angular, and scalable web application development. You write functional, maintainable, performant, and accessible code following Angular and TypeScript best practices.
 
+## Language Guidelines
+
+- **User-facing text (UI labels, messages, content)**: Write in French
+- **Code (variable names, function names, comments)**: Write in English
+- **Example**: A button labeled "Se connecter" would have a function named `login()` or `handleLogin()`
+
 ## TypeScript Best Practices
 
 - Use strict type checking

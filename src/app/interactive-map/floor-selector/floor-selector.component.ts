@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { Etage } from '../../core/models';
@@ -11,15 +11,15 @@ import { Etage } from '../../core/models';
     <div class="floor-selector" role="navigation" aria-label="Floor selector">
       <div class="floor-selector-title">
         <i class="pi pi-building"></i>
-        <span>Floors</span>
+        <span>Etages</span>
       </div>
 
-      @for (etage of etages(); track etage._id) {
+      @for (etage of sortedEtages(); track etage._id) {
         <button
           class="floor-button"
           [class.active]="etage._id === selectedEtageId()"
           (click)="selectEtage(etage._id)"
-          [attr.aria-label]="'Go to ' + etage.nom"
+          [attr.aria-label]="'Aller à ' + etage.nom"
           [attr.aria-pressed]="etage._id === selectedEtageId()">
           <span class="floor-level">{{ etage.niveau }}</span>
           <span class="floor-name">{{ etage.nom }}</span>
@@ -134,6 +134,11 @@ export class FloorSelectorComponent {
   etages = input.required<Etage[]>();
   selectedEtageId = input.required<string>();
   etageSelected = output<string>();
+
+  // Sort floors by niveau in descending order (highest floor first)
+  sortedEtages = computed(() => 
+    [...this.etages()].sort((a, b) => b.niveau - a.niveau)
+  );
 
   selectEtage(etageId: string): void {
     this.etageSelected.emit(etageId);
