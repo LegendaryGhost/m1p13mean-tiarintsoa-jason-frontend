@@ -100,6 +100,18 @@ This application uses a professional, modern color palette optimized for mall ma
 - Use semantic colors consistently across the application
 - Ensure sufficient contrast for all interactive elements
 
+### Theming & Dark Mode Support
+
+The application automatically adapts to the user's browser/OS theme preference (light or dark).
+
+**Guidelines:**
+- ALWAYS use CSS custom properties (CSS variables) for colors, never hardcoded color values
+- Use the standardized variable names defined in `styles.scss` (e.g., `var(--color-primary)`, `var(--color-background-primary)`, `var(--color-text-primary)`)
+- DO NOT use hardcoded hex colors like `#1976D2` or rgb values directly in component styles
+- Both `--color-*` prefixed and legacy variable names are available, prefer `--color-*` prefix for consistency
+- The dark theme is automatically applied via `@media (prefers-color-scheme: dark)` in the global styles
+- Test components in both light and dark modes to ensure proper contrast and readability
+
 ### Typography
 
 This application uses **Inter** as the primary font family:

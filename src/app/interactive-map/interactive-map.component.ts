@@ -227,12 +227,12 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       flex-shrink: 0;
       
       &.occupied {
-        background-color: #1976D2;
+        background-color: var(--color-primary);
       }
       
       &.available {
         background-color: transparent;
-        border: 2px dashed #9E9E9E;
+        border: 2px dashed var(--color-text-disabled);
       }
     }
 
@@ -337,6 +337,16 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     // Cleanup
   }
 
+  /**
+   * Get the value of a CSS variable from the document
+   */
+  private getCSSVariable(varName: string): string {
+    if (!this.isBrowser) return '';
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(varName)
+      .trim();
+  }
+
   private loadData(): void {
     this.etageService.getEtages().subscribe(etages => {
       this.etages.set(etages);
@@ -395,7 +405,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw background
-    ctx.fillStyle = '#F5F7FA';
+    ctx.fillStyle = this.getCSSVariable('--color-background-secondary');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw background image if loaded
@@ -421,33 +431,39 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     if (emplacement.statut === 'occupe') {
       // Occupied slot - filled with primary color
-      ctx.fillStyle = isHovered ? '#1565C0' : '#1976D2';
+      ctx.fillStyle = isHovered 
+        ? this.getCSSVariable('--color-primary-dark') 
+        : this.getCSSVariable('--color-primary');
       ctx.fillRect(coord.x, coord.y, coord.width, coord.height);
 
       // Border
-      ctx.strokeStyle = '#0D47A1';
+      ctx.strokeStyle = this.getCSSVariable('--color-primary-dark');
       ctx.lineWidth = 2;
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
 
       // Draw shop number
-      ctx.fillStyle = 'white';
+      ctx.fillStyle = this.getCSSVariable('--color-background-primary');
       ctx.font = 'bold 14px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(emplacement.numero, coord.x + coord.width / 2, coord.y + coord.height / 2);
     } else {
       // Available slot - outlined
-      ctx.fillStyle = isHovered ? '#E8EBF0' : 'transparent';
+      ctx.fillStyle = isHovered 
+        ? this.getCSSVariable('--color-background-tertiary') 
+        : 'transparent';
       ctx.fillRect(coord.x, coord.y, coord.width, coord.height);
 
-      ctx.strokeStyle = isHovered ? '#9E9E9E' : '#BDBDBD';
+      ctx.strokeStyle = isHovered 
+        ? this.getCSSVariable('--color-text-disabled') 
+        : this.getCSSVariable('--color-border');
       ctx.lineWidth = isHovered ? 3 : 2;
       ctx.setLineDash([5, 5]);
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
       ctx.setLineDash([]);
 
       // Draw "Available" text
-      ctx.fillStyle = '#9E9E9E';
+      ctx.fillStyle = this.getCSSVariable('--color-text-disabled');
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
