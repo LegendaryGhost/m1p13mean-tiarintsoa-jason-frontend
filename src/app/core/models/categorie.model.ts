@@ -2,7 +2,8 @@ export interface Categorie {
   _id: string;
   nom: string;
   description: string;
-  icone: string; // Icon/image URL
+  icon: string; // PrimeIcon class name (e.g., 'pi-shopping-bag')
+  couleur: string; // Hex color for category tags
   createdAt: Date;
   updatedAt: Date;
 }
