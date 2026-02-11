@@ -39,24 +39,24 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
         <div class="header-right">
           @if (!authService.isAuthenticated()) {
             <p-button
-              label="Shop Owner Login"
+              label="Me connecter"
               icon="pi pi-sign-in"
               (onClick)="navigateToLogin()"
               [outlined]="true">
             </p-button>
           } @else {
             @if (authService.currentUser(); as user) {
-              <span class="user-welcome">Welcome, {{ user.nom }}</span>
+              <span class="user-welcome">Bienvenue, {{ user.nom }}</span>
               @if (user.role === 'boutique') {
                 <p-button
-                  label="Dashboard"
+                  label="Tableau de bord"
                   icon="pi pi-th-large"
                   (onClick)="navigateToDashboard()"
                   severity="secondary">
                 </p-button>
               }
               <p-button
-                label="Logout"
+                label="Se déconnecter"
                 icon="pi pi-sign-out"
                 (onClick)="authService.logout()"
                 [text]="true"
@@ -80,15 +80,15 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
           </canvas>
 
           <div class="map-legend">
-            <h3 class="legend-title">Legend</h3>
+            <h3 class="legend-title">Légende</h3>
             <div class="legend-items">
               <div class="legend-item">
                 <div class="legend-color occupied"></div>
-                <span>Occupied Shop</span>
+                <span>Boutique Occupée</span>
               </div>
               <div class="legend-item">
                 <div class="legend-color available"></div>
-                <span>Available Slot</span>
+                <span>Emplacement Disponible</span>
               </div>
             </div>
           </div>
@@ -225,11 +225,11 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       height: 20px;
       border-radius: 4px;
       flex-shrink: 0;
-      
+
       &.occupied {
         background-color: var(--color-primary);
       }
-      
+
       &.available {
         background-color: transparent;
         border: 2px dashed var(--color-text-disabled);
@@ -379,7 +379,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
   private loadFloorPlanImage(): void {
     if (!this.isBrowser) return;
-    
+
     const etage = this.currentEtage();
     if (!etage) return;
 
@@ -431,8 +431,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     if (emplacement.statut === 'occupe') {
       // Occupied slot - filled with primary color
-      ctx.fillStyle = isHovered 
-        ? this.getCSSVariable('--color-primary-dark') 
+      ctx.fillStyle = isHovered
+        ? this.getCSSVariable('--color-primary-dark')
         : this.getCSSVariable('--color-primary');
       ctx.fillRect(coord.x, coord.y, coord.width, coord.height);
 
@@ -449,13 +449,13 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       ctx.fillText(emplacement.numero, coord.x + coord.width / 2, coord.y + coord.height / 2);
     } else {
       // Available slot - outlined
-      ctx.fillStyle = isHovered 
-        ? this.getCSSVariable('--color-background-tertiary') 
+      ctx.fillStyle = isHovered
+        ? this.getCSSVariable('--color-background-tertiary')
         : 'transparent';
       ctx.fillRect(coord.x, coord.y, coord.width, coord.height);
 
-      ctx.strokeStyle = isHovered 
-        ? this.getCSSVariable('--color-text-disabled') 
+      ctx.strokeStyle = isHovered
+        ? this.getCSSVariable('--color-text-disabled')
         : this.getCSSVariable('--color-border');
       ctx.lineWidth = isHovered ? 3 : 2;
       ctx.setLineDash([5, 5]);
@@ -463,11 +463,11 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       ctx.setLineDash([]);
 
       // Draw "Available" text
-      ctx.fillStyle = this.getCSSVariable('--color-text-disabled');
+      ctx.fillStyle = this.getCSSVariable('--color-background-primary');
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Available', coord.x + coord.width / 2, coord.y + coord.height / 2);
+      ctx.fillText('Vide', coord.x + coord.width / 2, coord.y + coord.height / 2);
     }
   }
 
