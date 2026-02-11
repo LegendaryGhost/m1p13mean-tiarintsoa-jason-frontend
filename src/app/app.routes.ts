@@ -2,10 +2,10 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
-import { InteractiveMapComponent } from './features/buyer/interactive-map/interactive-map.component';
+import { InteractiveMapComponent } from './interactive-map/interactive-map.component';
 
 export const routes: Routes = [
-  { path: '', component: LoginComponent },
+  { path: '', component: InteractiveMapComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   {
