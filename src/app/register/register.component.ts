@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -16,7 +16,8 @@ import { FormsModule } from '@angular/forms';
     PasswordModule,
     ButtonModule,
     MessageModule,
-    FormsModule
+    FormsModule,
+    RouterModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -111,6 +112,10 @@ import { FormsModule } from '@angular/forms';
 
         <div class="login-link">
           <p>Déjà inscrit ? <a (click)="goToLogin()">Se connecter</a></p>
+        </div>
+
+        <div class="map-link">
+          <p><a routerLink="/">Retour à la carte</a></p>
         </div>
       </p-card>
     </div>
@@ -252,17 +257,17 @@ import { FormsModule } from '@angular/forms';
       margin-top: 1rem;
     }
 
-    .login-link {
+    .login-link, .map-link {
       margin-top: 1.5rem;
       text-align: center;
     }
 
-    .login-link p {
+    .login-link p, .map-link p {
       color: var(--text-secondary);
       font-size: 0.875rem;
     }
 
-    .login-link a {
+    .login-link a, .map-link a {
       color: var(--accent-color);
       text-decoration: none;
       cursor: pointer;
@@ -270,7 +275,7 @@ import { FormsModule } from '@angular/forms';
       transition: color 0.2s ease;
     }
 
-    .login-link a:hover {
+    .login-link a:hover, .map-link a:hover {
       color: var(--accent-dark);
       text-decoration: underline;
     }

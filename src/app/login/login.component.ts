@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -16,7 +16,8 @@ import { FormsModule } from '@angular/forms';
     PasswordModule,
     ButtonModule,
     MessageModule,
-    FormsModule
+    FormsModule,
+    RouterModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -68,6 +69,10 @@ import { FormsModule } from '@angular/forms';
 
         <div class="register-link">
           <p>Pas encore de compte ? <a (click)="goToRegister()">S'inscrire</a></p>
+        </div>
+
+        <div class="map-link">
+          <p><a routerLink="/">Retour à la carte</a></p>
         </div>
       </p-card>
     </div>
@@ -170,17 +175,17 @@ import { FormsModule } from '@angular/forms';
       margin-top: 1rem;
     }
 
-    .register-link {
+    .register-link, .map-link {
       margin-top: 1.5rem;
       text-align: center;
     }
 
-    .register-link p {
+    .register-link p, .map-link p {
       color: var(--text-secondary);
       font-size: 0.875rem;
     }
 
-    .register-link a {
+    .register-link a, .map-link a {
       color: var(--accent-color);
       text-decoration: none;
       cursor: pointer;
@@ -188,7 +193,7 @@ import { FormsModule } from '@angular/forms';
       transition: color 0.2s ease;
     }
 
-    .register-link a:hover {
+    .register-link a:hover, .map-link a:hover {
       color: var(--accent-dark);
       text-decoration: underline;
     }
