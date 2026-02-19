@@ -38,12 +38,12 @@ import { CategorieService } from '../../core/services/categorie.service';
 
         <div class="shop-content">
           <div class="shop-description">
-            <h3>About</h3>
+            <h3>A propos</h3>
             <p>{{ shop.description }}</p>
           </div>
 
           <div class="shop-hours">
-            <h3>Opening Hours</h3>
+            <h3>Heures d'ouverture</h3>
             <div class="hours-info">
               <i class="pi pi-clock"></i>
               <span>{{ shop.heureOuverture }} - {{ shop.heureFermeture }}</span>
@@ -57,7 +57,7 @@ import { CategorieService } from '../../core/services/categorie.service';
           @if (shop.statut === 'validee') {
             <div class="shop-status">
               <i class="pi pi-check-circle" style="color: var(--color-success);"></i>
-              <span>Verified Shop</span>
+              <span>Boutique vérifiée</span>
             </div>
           }
         </div>
@@ -184,17 +184,17 @@ export class ShopDetailModalComponent {
   }
 
   formatJours(jours: string[]): string {
-    if (jours.length === 7) return 'Every day';
-    if (jours.length === 0) return 'Closed';
+    if (jours.length === 7) return 'Tous les jours';
+    if (jours.length === 0) return 'Fermé';
 
     const jourMap: Record<string, string> = {
-      'lundi': 'Mon',
-      'mardi': 'Tue',
-      'mercredi': 'Wed',
-      'jeudi': 'Thu',
-      'vendredi': 'Fri',
-      'samedi': 'Sat',
-      'dimanche': 'Sun'
+      'lundi': 'Lun',
+      'mardi': 'Mar',
+      'mercredi': 'Mer',
+      'jeudi': 'Jeu',
+      'vendredi': 'Ven',
+      'samedi': 'Sam',
+      'dimanche': 'Dim'
     };
 
     return jours.map(j => jourMap[j] || j).join(', ');
