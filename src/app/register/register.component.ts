@@ -22,15 +22,17 @@ import { FormsModule } from '@angular/forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="register-wrapper">
-      <p-card header="Créer un compte">
+      <p-card header="Inscription Boutique">
+        <p class="subtitle">Créez votre compte boutique. Votre demande sera examinée par un administrateur.</p>
+
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="email">Email professionnel</label>
           <input
             pInputText
             id="email"
             [value]="email()"
             (input)="email.set($any($event.target).value)"
-            placeholder="Entrez votre email"
+            placeholder="votre@email.com"
             type="email"
             class="w-full" />
         </div>
@@ -68,7 +70,7 @@ import { FormsModule } from '@angular/forms';
               id="nom"
               [value]="nom()"
               (input)="nom.set($any($event.target).value)"
-              placeholder="Nom"
+              placeholder="Nom du responsable"
               type="text"
               class="w-full" />
           </div>
@@ -80,23 +82,10 @@ import { FormsModule } from '@angular/forms';
               id="prenom"
               [value]="prenom()"
               (input)="prenom.set($any($event.target).value)"
-              placeholder="Prénom"
+              placeholder="Prénom du responsable"
               type="text"
               class="w-full" />
           </div>
-        </div>
-
-        <div class="form-group">
-          <label for="role">Type de compte</label>
-          <select
-            id="role"
-            class="select-field w-full"
-            [value]="role()"
-            (change)="role.set($any($event.target).value)">
-            <option value="acheteur">Acheteur</option>
-            <option value="boutique">Boutique</option>
-            <option value="admin">Administrateur</option>
-          </select>
         </div>
 
         <p-button
@@ -105,6 +94,10 @@ import { FormsModule } from '@angular/forms';
           [disabled]="isLoading() || !isFormValid()"
           [loading]="isLoading()"
           styleClass="w-full" />
+
+        @if (successMessage()) {
+          <p-message severity="success" [text]="successMessage()" styleClass="w-full mt-3" />
+        }
 
         @if (errorMessage()) {
           <p-message severity="error" [text]="errorMessage()" styleClass="w-full mt-3" />
@@ -149,6 +142,17 @@ import { FormsModule } from '@angular/forms';
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: 6px;
+      border-left: 3px solid var(--warning-color);
     }
 
     .form-group {
@@ -291,9 +295,10 @@ export class RegisterComponent {
   passwordValue = '';
   nom = signal('');
   prenom = signal('');
-  role = signal<'admin' | 'boutique' | 'acheteur'>('acheteur');
+  role = signal<'boutique'>('boutique'); // Fixed to boutique role
   isLoading = signal(false);
   errorMessage = signal('');
+  successMessage = signal('');
   buttonLabel = computed(() =>
     this.isLoading() ? "Inscription en cours..." : "S'inscrire"
   );
@@ -313,6 +318,7 @@ export class RegisterComponent {
 
     this.isLoading.set(true);
     this.errorMessage.set('');
+    this.successMessage.set('');
 
     this.authService.register({
       email: this.email(),
@@ -323,8 +329,13 @@ export class RegisterComponent {
     }).subscribe({
       next: () => {
         this.isLoading.set(false);
-        console.log('Registration successful');
-        // Navigation is handled by the auth service
+        this.successMessage.set('Inscription réussie ! Votre compte est en attente d\'approbation par un administrateur.');
+        // Clear form
+        this.email.set('');
+        this.password.set('');
+        this.passwordValue = '';
+        this.nom.set('');
+        this.prenom.set('');
       },
       error: (err) => {
         this.isLoading.set(false);

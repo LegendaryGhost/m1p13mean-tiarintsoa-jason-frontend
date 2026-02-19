@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
@@ -9,7 +9,7 @@ import { MessageModule } from 'primeng/message';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-admin-login',
   imports: [
     CardModule,
     InputTextModule,
@@ -21,18 +21,18 @@ import { FormsModule } from '@angular/forms';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="login-wrapper">
-      <p-card header="Connexion Boutique">
-        <p class="subtitle">Accédez à votre espace boutique</p>
+    <div class="admin-login-wrapper">
+      <p-card header="Back-Office">
+        <p class="subtitle">Espace administration du centre commercial</p>
 
         <div class="form-group">
-          <label for="email">Email professionnel</label>
+          <label for="email">Email administrateur</label>
           <input
             pInputText
             id="email"
             [value]="email()"
             (input)="email.set($any($event.target).value)"
-            placeholder="votre@email.com"
+            placeholder="admin@mall.com"
             type="email"
             class="w-full" />
         </div>
@@ -43,7 +43,7 @@ import { FormsModule } from '@angular/forms';
             [(ngModel)]="passwordValue"
             (ngModelChange)="password.set($event)"
             inputId="password"
-            placeholder="Mot de passe"
+            placeholder="Mot de passe sécurisé"
             [toggleMask]="true"
             [feedback]="false"
             styleClass="w-full">
@@ -53,7 +53,7 @@ import { FormsModule } from '@angular/forms';
                 id="password"
                 type="password"
                 class="w-full"
-                placeholder="Mot de passe" />
+                placeholder="Mot de passe sécurisé" />
             </ng-template>
           </p-password>
         </div>
@@ -69,10 +69,6 @@ import { FormsModule } from '@angular/forms';
           <p-message severity="error" [text]="errorMessage()" styleClass="w-full mt-3" />
         }
 
-        <div class="register-link">
-          <p>Pas encore de compte ? <a (click)="goToRegister()">S'inscrire</a></p>
-        </div>
-
         <div class="map-link">
           <p><a routerLink="/">Retour à la carte</a></p>
         </div>
@@ -80,22 +76,22 @@ import { FormsModule } from '@angular/forms';
     </div>
   `,
   styles: [`
-    .login-wrapper {
+    .admin-login-wrapper {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 20px;
-      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-light) 100%);
+      background: linear-gradient(135deg, var(--color-background-secondary) 0%, var(--color-primary-light) 100%);
     }
 
     :host ::ng-deep .p-card {
       width: 100%;
       max-width: 400px;
-      box-shadow: 0 8px 24px rgba(25, 118, 210, 0.12);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 12%, transparent);
       border-radius: 12px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-primary);
+      border: 1px solid var(--color-border);
+      background: var(--color-background-primary);
     }
 
     :host ::ng-deep .p-card-header {
@@ -103,16 +99,12 @@ import { FormsModule } from '@angular/forms';
       font-size: 2rem;
       font-weight: 700;
       line-height: 1.2;
-      color: var(--primary-color);
-      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--color-primary);
     }
 
     .subtitle {
       text-align: center;
-      color: var(--text-secondary);
+      color: var(--color-text-secondary);
       font-size: 0.875rem;
       margin-bottom: 1.5rem;
     }
@@ -125,7 +117,7 @@ import { FormsModule } from '@angular/forms';
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      color: var(--text-primary);
+      color: var(--color-text-primary);
     }
 
     .w-full {
@@ -133,13 +125,13 @@ import { FormsModule } from '@angular/forms';
     }
 
     :host ::ng-deep .p-inputtext {
-      border-color: var(--border-color);
-      color: var(--text-primary);
+      border-color: var(--color-border);
+      color: var(--color-text-primary);
     }
 
     :host ::ng-deep .p-inputtext:enabled:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, transparent);
     }
 
     :host ::ng-deep .p-password {
@@ -148,26 +140,26 @@ import { FormsModule } from '@angular/forms';
 
     :host ::ng-deep .p-password input {
       width: 100%;
-      border-color: var(--border-color);
-      color: var(--text-primary);
+      border-color: var(--color-border);
+      color: var(--color-text-primary);
     }
 
     :host ::ng-deep .p-password input:enabled:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, transparent);
     }
 
     :host ::ng-deep .p-button {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
       transition: all 0.3s ease;
     }
 
     :host ::ng-deep .p-button:enabled:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
     }
 
     :host ::ng-deep .p-button:enabled:active {
@@ -175,40 +167,40 @@ import { FormsModule } from '@angular/forms';
     }
 
     :host ::ng-deep .p-message {
-      background: rgba(244, 67, 54, 0.1);
-      border-color: var(--error-color);
-      color: var(--error-color);
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      border-color: var(--color-error);
+      color: var(--color-error);
     }
 
     .mt-3 {
       margin-top: 1rem;
     }
 
-    .register-link, .map-link {
+    .map-link {
       margin-top: 1.5rem;
       text-align: center;
     }
 
-    .register-link p, .map-link p {
-      color: var(--text-secondary);
+    .map-link p {
+      color: var(--color-text-secondary);
       font-size: 0.875rem;
     }
 
-    .register-link a, .map-link a {
-      color: var(--accent-color);
+    .map-link a {
+      color: var(--color-accent);
       text-decoration: none;
       cursor: pointer;
       font-weight: 500;
       transition: color 0.2s ease;
     }
 
-    .register-link a:hover, .map-link a:hover {
-      color: var(--accent-dark);
+    .map-link a:hover {
+      color: var(--color-accent-dark);
       text-decoration: underline;
     }
   `]
 })
-export class LoginComponent {
+export class AdminLoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -227,17 +219,18 @@ export class LoginComponent {
       email: this.email(),
       password: this.password()
     }).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading.set(false);
+        // Check if user is admin
+        if (response.user.role !== 'admin') {
+          this.errorMessage.set('Accès refusé. Seuls les administrateurs peuvent accéder au back-office.');
+          this.authService.logout();
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set('Connexion échouée: ' + (err.error?.message || err.message));
       }
     });
-  }
-
-  goToRegister() {
-    this.router.navigate(['/register']);
   }
 }

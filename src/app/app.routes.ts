@@ -4,6 +4,7 @@ import { LayoutComponent } from './layout/layout.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { InteractiveMapComponent } from './interactive-map/interactive-map.component';
+import { AdminLoginComponent } from './features/admin/login/admin-login.component';
 
 export const routes: Routes = [
   {
@@ -28,5 +29,6 @@ export const routes: Routes = [
   },
   // Auth routes outside layout (no sidebar/header)
   { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent }
+  { path: 'register', component: RegisterComponent },
+  { path: 'back-office/login', component: AdminLoginComponent },
 ];

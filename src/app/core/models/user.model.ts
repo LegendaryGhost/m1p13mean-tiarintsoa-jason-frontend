@@ -5,6 +5,9 @@ export interface User {
   role: 'admin' | 'boutique' | 'acheteur';
   nom: string;
   prenom: string;
+  isApproved?: boolean;
+  approvedAt?: Date;
+  approvedBy?: string;
   createdAt: Date;
   updatedAt: Date;
 }
