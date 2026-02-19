@@ -12,13 +12,10 @@ import {
   PLATFORM_ID
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { AuthService } from '../core/services/auth.service';
 import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
 import { BoutiqueService } from '../core/services/boutique.service';
-import { MockDataService } from '../core/services/mock-data.service';
 import { Etage, Emplacement, Boutique } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
@@ -29,48 +26,8 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="map-container">
-      <!-- Header -->
-      <header class="map-header">
-        <div class="header-left">
-          <i class="pi pi-building" style="font-size: 1.5rem; color: var(--color-primary);"></i>
-          <h1>{{ mallName() }}</h1>
-        </div>
-
-        <div class="header-right">
-          @if (!authService.isAuthenticated()) {
-            <p-button
-              label="Me connecter"
-              icon="pi pi-sign-in"
-              (onClick)="navigateToLogin()"
-              [outlined]="true">
-            </p-button>
-          } @else {
-            @if (authService.currentUser(); as user) {
-              <span class="user-welcome">Bienvenue, {{ user.nom }}</span>
-              @if (user.role === 'boutique') {
-                <p-button
-                  label="Tableau de bord"
-                  icon="pi pi-th-large"
-                  (onClick)="navigateToDashboard()"
-                  severity="secondary">
-                </p-button>
-              }
-              <p-button
-                label="Se déconnecter"
-                icon="pi pi-sign-out"
-                (onClick)="authService.logout()"
-                [text]="true"
-                severity="secondary">
-              </p-button>
-            }
-          }
-        </div>
-      </header>
-
-      <!-- Main Content Area -->
-      <div class="main-content">
-        <!-- Map Canvas -->
-        <div class="canvas-wrapper">
+      <!-- Map Canvas -->
+      <div class="canvas-wrapper">
           <canvas
             #mapCanvas
             class="map-canvas"
@@ -102,7 +59,6 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
             (etageSelected)="onEtageSelected($event)">
           </app-floor-selector>
         </aside>
-      </div>
 
       <!-- Shop Detail Modal -->
       <app-shop-detail-modal
@@ -115,50 +71,11 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
   styles: [`
     .map-container {
       display: flex;
-      flex-direction: column;
-      height: 100vh;
-      background: var(--color-background-secondary);
-    }
-
-    .map-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: var(--color-background-primary);
-      border-bottom: 2px solid var(--color-border);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      h1 {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--color-text-primary);
-      }
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-
-      .user-welcome {
-        color: var(--color-text-secondary);
-        font-weight: 500;
-      }
-    }
-
-    .main-content {
-      flex: 1;
-      display: flex;
       gap: 2rem;
+      height: 100%;
       overflow: hidden;
+      padding: 2rem;
+      background: var(--color-background-secondary);
     }
 
     .canvas-wrapper {
@@ -166,7 +83,6 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
       position: relative;
       overflow: hidden;
     }
@@ -174,8 +90,6 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
     .floor-sidebar {
       display: flex;
       align-items: center;
-      padding: 2rem 2rem 2rem 0;
-      background: var(--color-background-secondary);
     }
 
     .map-canvas {
@@ -237,26 +151,8 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
     }
 
     @media (max-width: 768px) {
-      .map-header {
+      .map-container {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1rem;
-      }
-
-      .header-right {
-        flex-wrap: wrap;
-      }
-
-      .main-content {
-        flex-direction: column;
-      }
-
-      .canvas-wrapper {
-        padding: 1rem;
-      }
-
-      .floor-sidebar {
         padding: 1rem;
       }
 
@@ -275,13 +171,10 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
 export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-  authService = inject(AuthService);
   private platformId = inject(PLATFORM_ID);
-  private router = inject(Router);
   private etageService = inject(EtageService);
   private emplacementService = inject(EmplacementService);
   private boutiqueService = inject(BoutiqueService);
-  private mockDataService = inject(MockDataService);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   // Signals
@@ -295,8 +188,6 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   currentEtage = computed<Etage | undefined>(() =>
     this.etages().find(e => e._id === this.selectedEtageId())
   );
-
-  mallName = computed(() => this.mockDataService.centreCommercial().nom);
 
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -475,7 +366,12 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     const emplacement = this.getEmplacementAtPoint(event);
 
     if (emplacement && emplacement.statut === 'occupe' && emplacement.boutiqueId) {
-      this.boutiqueService.getBoutiqueById(emplacement.boutiqueId).subscribe(boutique => {
+      // Extract ID from boutiqueId (might be populated object or just ID string)
+      const boutiqueId = typeof emplacement.boutiqueId === 'object' 
+        ? emplacement.boutiqueId._id 
+        : emplacement.boutiqueId;
+        
+      this.boutiqueService.getBoutiqueById(boutiqueId).subscribe(boutique => {
         if (boutique) {
           this.selectedBoutique.set(boutique);
           this.showShopModal.set(true);
@@ -527,13 +423,5 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     if (!visible) {
       this.selectedBoutique.set(null);
     }
-  }
-
-  navigateToLogin(): void {
-    this.router.navigate(['/login']);
-  }
-
-  navigateToDashboard(): void {
-    this.router.navigate(['/boutique/dashboard']);
   }
 }

@@ -1,25 +1,24 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Boutique } from '../models';
-import { MockDataService } from './mock-data.service';
+import { ApiService } from './api.service';
+import { ApiResponse } from '../models/api-response.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BoutiqueService {
-  private mockDataService = inject(MockDataService);
+  private apiService = inject(ApiService);
 
   getBoutiqueById(id: string): Observable<Boutique | undefined> {
-    const boutique = this.mockDataService.boutiques().find(b => b._id === id);
-    return of(boutique);
+    return this.apiService.get<ApiResponse<Boutique>>(`boutiques/${id}`).pipe(
+      map(response => response.data)
+    );
   }
 
   getAllBoutiques(): Observable<Boutique[]> {
-    return of(this.mockDataService.boutiques());
-  }
-
-  getBoutiquesByCategorie(categorieId: string): Observable<Boutique[]> {
-    const boutiques = this.mockDataService.boutiques().filter(b => b.categorieId === categorieId);
-    return of(boutiques);
+    return this.apiService.get<ApiResponse<Boutique[]>>('boutiques').pipe(
+      map(response => response.data)
+    );
   }
 }

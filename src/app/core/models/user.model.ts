@@ -5,7 +5,6 @@ export interface User {
   role: 'admin' | 'boutique' | 'acheteur';
   nom: string;
   prenom: string;
-  favoris?: string[]; // Array of boutique IDs (for acheteur role)
   createdAt: Date;
   updatedAt: Date;
 }
