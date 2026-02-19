@@ -1,3 +1,5 @@
+import { Boutique } from './boutique.model';
+
 export interface EmplacementCoordonnees {
   x: number;
   y: number;
@@ -11,7 +13,7 @@ export interface Emplacement {
   numero: string; // Location number/name
   coordonnees: EmplacementCoordonnees; // Clickable zone coordinates
   statut: 'libre' | 'occupe';
-  boutiqueId?: string; // Reference to Boutique (if occupied)
+  boutiqueId?: string | Boutique; // Reference to Boutique (if occupied) - can be populated
   createdAt: Date;
   updatedAt: Date;
 }

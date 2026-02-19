@@ -1,20 +1,24 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Etage } from '../models';
-import { MockDataService } from './mock-data.service';
+import { ApiService } from './api.service';
+import { ApiResponse } from '../models/api-response.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EtageService {
-  private mockDataService = inject(MockDataService);
+  private apiService = inject(ApiService);
 
   getEtages(): Observable<Etage[]> {
-    return of(this.mockDataService.etages());
+    return this.apiService.get<ApiResponse<Etage[]>>('etages').pipe(
+      map(response => response.data)
+    );
   }
 
   getEtageById(id: string): Observable<Etage | undefined> {
-    const etage = this.mockDataService.etages().find(e => e._id === id);
-    return of(etage);
+    return this.apiService.get<ApiResponse<Etage>>(`etages/${id}`).pipe(
+      map(response => response.data)
+    );
   }
 }

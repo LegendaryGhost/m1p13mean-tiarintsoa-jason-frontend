@@ -366,7 +366,12 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     const emplacement = this.getEmplacementAtPoint(event);
 
     if (emplacement && emplacement.statut === 'occupe' && emplacement.boutiqueId) {
-      this.boutiqueService.getBoutiqueById(emplacement.boutiqueId).subscribe(boutique => {
+      // Extract ID from boutiqueId (might be populated object or just ID string)
+      const boutiqueId = typeof emplacement.boutiqueId === 'object' 
+        ? emplacement.boutiqueId._id 
+        : emplacement.boutiqueId;
+        
+      this.boutiqueService.getBoutiqueById(boutiqueId).subscribe(boutique => {
         if (boutique) {
           this.selectedBoutique.set(boutique);
           this.showShopModal.set(true);
