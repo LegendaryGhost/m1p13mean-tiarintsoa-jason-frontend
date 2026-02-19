@@ -9,7 +9,7 @@ export interface Boutique {
   heureOuverture: string; // Format: "HH:mm"
   heureFermeture: string; // Format: "HH:mm"
   joursOuverture: string[]; // Ex: ["lundi", "mardi", ...]
-  statut: 'en_attente' | 'validee' | 'refusee';
+  statut: 'en_attente' | 'validee' | 'rejetee';
   createdAt: Date;
   updatedAt: Date;
 }
