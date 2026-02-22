@@ -215,21 +215,16 @@ export class AdminLoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.authService.login({
+    this.authService.loginAdmin({
       email: this.email(),
       password: this.password()
     }).subscribe({
-      next: (response) => {
+      next: () => {
         this.isLoading.set(false);
-        // Check if user is admin
-        if (response.user.role !== 'admin') {
-          this.errorMessage.set('Accès refusé. Seuls les administrateurs peuvent accéder au back-office.');
-          this.authService.logout();
-        }
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set('Connexion échouée: ' + (err.error?.message || err.message));
+        this.errorMessage.set(err.error?.message || 'Connexion échouée');
       }
     });
   }

@@ -64,7 +64,7 @@ import { CategorieService } from '../../core/services/categorie.service';
 
         <ng-template #footer>
           <p-button
-            label="Close"
+            label="Fermer"
             icon="pi pi-times"
             (onClick)="onVisibleChange(false)"
             [text]="true"

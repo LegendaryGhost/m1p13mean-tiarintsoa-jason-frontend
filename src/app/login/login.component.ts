@@ -232,7 +232,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set('Connexion échouée: ' + (err.error?.message || err.message));
+        this.errorMessage.set(err.error?.message || 'Connexion échouée');
       }
     });
   }
