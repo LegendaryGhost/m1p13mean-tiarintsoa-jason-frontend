@@ -61,6 +61,21 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Use the `inject()` function instead of constructor injection
 
+## Data Models & Services Architecture
+
+This application follows a standardized pattern for data models and services:
+
+- **Models**: Use Base/Populated pattern to handle Mongoose populated references
+  - `*Base` interfaces for form data (IDs only)
+  - `*Populated` interfaces for display data (nested objects)
+  - Type guards to check which variant at runtime
+- **Services**: Extend generic `CrudService<TBase, TPopulated>` for consistent CRUD operations
+  - `getAll()` and `getById()` return populated entities for display
+  - `create()` and `update()` use base entities with ID strings
+  - Custom methods can be added for specific queries
+
+**📖 For complete documentation, patterns, and examples, see:** [`copilot/models-services-patterns.md`](./copilot/models-services-patterns.md)
+
 ## UI guidelines
 
 - Our main library for UI components is PrimeNG
