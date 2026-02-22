@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.dynamap.run.place/api' // Placeholder, replace later with the actual API URL for production
+  apiUrl: 'http://localhost:3000/api'
 };
