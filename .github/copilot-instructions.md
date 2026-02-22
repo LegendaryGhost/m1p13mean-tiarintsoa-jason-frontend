@@ -152,6 +152,107 @@ This application uses **Inter** as the primary font family:
 - Maintain proper font weight hierarchy
 - Inter is optimized for screen readability and provides excellent legibility
 
+### Form Design & Styling
+
+This application follows consistent form design patterns across all authentication and data entry forms.
+
+**Shared Styles:**
+- Use `src/app/shared/styles/auth-forms.scss` for authentication forms (login, register, password reset)
+- Import with: `@import '../shared/styles/auth-forms.scss';` (adjust path as needed)
+- This ensures consistency across all auth forms
+
+**Form Layout Standards:**
+
+**Full-Page Forms (Login, Register):**
+- Centered layout with gradient background
+- Max-width: 400px (500px for wider forms with side-by-side fields)
+- Padding: 20px (responsive)
+- Card-based design with subtle shadow
+- Background: `linear-gradient(135deg, var(--color-background-secondary) 0%, var(--color-primary-light) 100%)`
+
+**Card Styling:**
+- Border-radius: 12px
+- Border: 1px solid `var(--color-border)`
+- Box-shadow: `0 8px 24px color-mix(in srgb, var(--color-primary) 12%, transparent)`
+- Background: `var(--color-background-primary)`
+
+**Form Elements:**
+
+**Labels:**
+- Font-weight: 500 (medium)
+- Font-size: 1rem
+- Color: `var(--color-text-primary)`
+- Margin-bottom: 0.5rem
+- Display: block
+
+**Input Fields:**
+- Border: 1px solid `var(--color-border)`
+- Border-radius: 6px (PrimeNG default)
+- Padding: 0.75rem (PrimeNG default)
+- Font-size: 1rem
+- Color: `var(--color-text-primary)`
+- Background: `var(--color-background-primary)`
+- Width: 100% (use `.w-full` class)
+
+**Focus States:**
+- Border-color: `var(--color-primary)`
+- Box-shadow: `0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, transparent)`
+- Outline: none
+
+**Buttons:**
+- Background: `var(--color-primary)`
+- Border: 1px solid `var(--color-primary)`
+- Border-radius: 6px
+- Padding: 0.75rem 1.25rem
+- Font-size: 1rem
+- Font-weight: 400 (regular)
+- Text-transform: none
+- Transition: all 0.3s ease
+
+**Button Hover States:**
+- Background: `var(--color-primary-dark)`
+- Transform: `translateY(-1px)`
+- Box-shadow: `0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent)`
+
+**Form Groups:**
+- Margin-bottom: 1.5rem
+- Use `.form-group` class
+
+**Multi-Column Layout:**
+- Use `.form-row` for side-by-side fields
+- Grid: `1fr 1fr` (desktop), `1fr` (mobile < 480px)
+- Gap: 1rem
+
+**Messages (Success/Error):**
+- Use PrimeNG `p-message` component
+- Error background: `color-mix(in srgb, var(--color-error) 10%, transparent)`
+- Success background: `color-mix(in srgb, var(--color-success) 10%, transparent)`
+- Border matches message severity color
+- Margin-top: 1rem (use `.mt-3` class)
+
+**Links:**
+- Color: `var(--color-accent)`
+- Font-weight: 500
+- Transition: color 0.2s ease
+- Hover: `var(--color-accent-dark)` with underline
+- Use `.auth-link`, `.register-link`, `.login-link`, or `.map-link` classes
+
+**Subtitles:**
+- Font-size: 0.875rem
+- Color: `var(--color-text-secondary)`
+- Text-align: center
+- Margin-bottom: 1.5rem
+- Optional warning style: Left border accent with background
+
+**Best Practices:**
+- Always use CSS custom properties for colors
+- Maintain consistent spacing (multiples of 0.5rem)
+- Ensure all interactive elements have hover/focus states
+- Test forms in both light and dark modes
+- Keep form widths responsive (max-width with 100% width on mobile)
+- Use semantic HTML and proper labels for accessibility
+- Provide clear error messages with PrimeNG message component
+
 ## Project description
 
 This project is a web application built to manage the slots and location of a mall. It includes an interactive map for the visitors to easily find their way around the mall, product and slot location management for the sellers, and a dashboard for the mall administrators to manage the slots and location information. The application is built using Angular for the frontend and Node.js for the backend, with a MongoDB database to store the data. The application is designed to be user-friendly, responsive, and accessible, following best practices in web development.

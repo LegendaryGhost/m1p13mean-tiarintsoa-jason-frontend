@@ -29,10 +29,18 @@ export class AuthService {
   currentUser = signal<User | null>(this.getUserFromStorage());
   isAuthenticated = computed(() => !!this.currentUser());
 
+  loginAdmin(credentials: UserCredentials) {
+    return this.http.post<any>(`${this.apiUrl}/admin/login`, credentials).pipe(
+      tap(res => {
+        const { token, user } = res.data;
+        this.handleAuth(token, user);
+      })
+    );
+  }
+
   login(credentials: UserCredentials) {
     return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => {
-        // Your backend uses a 'res.success' wrapper, extract the data accordingly
         const { token, user } = res.data;
         this.handleAuth(token, user);
       })
@@ -43,7 +51,6 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/register`, data).pipe(
       tap(res => {
         const { token, user } = res.data;
-        this.handleAuth(token, user);
       })
     );
   }
@@ -54,14 +61,14 @@ export class AuthService {
       localStorage.setItem('mall_user', JSON.stringify(user));
     }
     this.currentUser.set(user);
-    
+
     // Redirect based on user role
     switch (user.role) {
       case 'admin':
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/back-office']);
         break;
       case 'boutique':
-        this.router.navigate(['/boutique/dashboard']);
+        this.router.navigate(['/boutique']);
         break;
       case 'acheteur':
         this.router.navigate(['/plan']);

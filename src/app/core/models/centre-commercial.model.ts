@@ -1,4 +1,5 @@
-export interface CentreCommercial {
+// CentreCommercial has no references, so Base and Populated are the same
+export interface CentreCommercialBase {
   _id: string;
   nom: string;
   description: string;
@@ -7,3 +8,6 @@ export interface CentreCommercial {
   heureFermeture: string; // Format: "HH:mm"
   updatedAt: Date;
 }
+
+// For consistency, we use the same type for both
+export type CentreCommercial = CentreCommercialBase;
