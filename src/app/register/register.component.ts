@@ -251,10 +251,16 @@ import { FormsModule } from '@angular/forms';
       border-color: var(--text-disabled);
     }
 
-    :host ::ng-deep .p-message {
-      background: rgba(244, 67, 54, 0.1);
-      border-color: var(--error-color);
-      color: var(--error-color);
+    :host ::ng-deep .p-message.p-message-error {
+      background: color-mix(in srgb, var(--color-error) 10%, transparent);
+      border-color: var(--color-error);
+      color: var(--color-error);
+    }
+
+    :host ::ng-deep .p-message.p-message-success {
+      background: color-mix(in srgb, var(--color-success) 10%, transparent);
+      border-color: var(--color-success);
+      color: var(--color-success);
     }
 
     .mt-3 {

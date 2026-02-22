@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
+import { PendingRegistrationsComponent } from './pending-registrations/pending-registrations.component';
 
 @Component({
   standalone: true,
@@ -8,6 +9,7 @@ import { Component } from '@angular/core';
 class AdminHomeComponent {}
 
 export const ADMIN_ROUTES: Routes = [
-  { path: '', component: AdminHomeComponent }
+  { path: '', component: AdminHomeComponent },
+  { path: 'pending-registrations', component: PendingRegistrationsComponent }
 ];
 export default ADMIN_ROUTES;

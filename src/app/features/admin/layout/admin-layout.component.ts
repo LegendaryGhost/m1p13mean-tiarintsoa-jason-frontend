@@ -414,6 +414,12 @@ export class AdminLayoutComponent {
       tooltip: 'Tableau de bord administrateur'
     },
     {
+      icon: 'pi-user-plus',
+      label: 'Inscriptions',
+      route: '/back-office/pending-registrations',
+      tooltip: 'Valider les inscriptions boutiques'
+    },
+    {
       icon: 'pi-list',
       label: 'Catégories',
       route: '/back-office/categories',
