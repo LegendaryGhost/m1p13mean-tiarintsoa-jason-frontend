@@ -51,7 +51,6 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/register`, data).pipe(
       tap(res => {
         const { token, user } = res.data;
-        this.handleAuth(token, user);
       })
     );
   }
@@ -66,10 +65,10 @@ export class AuthService {
     // Redirect based on user role
     switch (user.role) {
       case 'admin':
-        this.router.navigate(['/admin']);
+        this.router.navigate(['/back-office']);
         break;
       case 'boutique':
-        this.router.navigate(['/boutique/dashboard']);
+        this.router.navigate(['/boutique']);
         break;
       case 'acheteur':
         this.router.navigate(['/plan']);

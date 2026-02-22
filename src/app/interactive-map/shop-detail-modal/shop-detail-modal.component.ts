@@ -4,8 +4,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { Boutique, Categorie } from '../../core/models';
-import { CategorieService } from '../../core/services/categorie.service';
+import { Boutique, BoutiquePopulated, Categorie } from '../../core/models';
 
 @Component({
   selector: 'app-shop-detail-modal',
@@ -29,7 +28,7 @@ import { CategorieService } from '../../core/services/categorie.service';
             <img [src]="shop.logo" [alt]="shop.nom + ' logo'" class="shop-logo">
             <div class="shop-title">
               <h2>{{ shop.nom }}</h2>
-              @if (categorie(); as cat) {
+              @if (boutique()?.categorieId; as cat) {
                 <p-tag [value]="cat.nom" [style]="{ 'background-color': cat.couleur, 'color': 'white' }"></p-tag>
               }
             </div>
@@ -165,19 +164,8 @@ import { CategorieService } from '../../core/services/categorie.service';
 })
 export class ShopDetailModalComponent {
   visible = input.required<boolean>();
-  boutique = input.required<Boutique | null>();
+  boutique = input.required<BoutiquePopulated | null>();
   visibleChange = output<boolean>();
-
-  private categorieService = inject(CategorieService);
-
-  categorie = computed<Categorie | undefined>(() => {
-    const shop = this.boutique();
-    if (!shop) return undefined;
-
-    let cat: Categorie | undefined;
-    this.categorieService.getCategorieById(shop.categorieId).subscribe(c => cat = c);
-    return cat;
-  });
 
   onVisibleChange(visible: boolean): void {
     this.visibleChange.emit(visible);
