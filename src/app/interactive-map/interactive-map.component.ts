@@ -16,7 +16,7 @@ import { ButtonModule } from 'primeng/button';
 import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
 import { BoutiqueService } from '../core/services/boutique.service';
-import { Etage, Emplacement, Boutique } from '../core/models';
+import { Etage, Emplacement, Boutique, BoutiquePopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
 
@@ -181,7 +181,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   etages = signal<Etage[]>([]);
   selectedEtageId = signal<string>('');
   emplacements = signal<Emplacement[]>([]);
-  selectedBoutique = signal<Boutique | null>(null);
+  selectedBoutique = signal<BoutiquePopulated | null>(null);
   showShopModal = signal<boolean>(false);
 
   // Computed
@@ -367,10 +367,10 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     if (emplacement && emplacement.statut === 'occupe' && emplacement.boutiqueId) {
       // Extract ID from boutiqueId (might be populated object or just ID string)
-      const boutiqueId = typeof emplacement.boutiqueId === 'object' 
-        ? emplacement.boutiqueId._id 
+      const boutiqueId = typeof emplacement.boutiqueId === 'object'
+        ? emplacement.boutiqueId._id
         : emplacement.boutiqueId;
-        
+
       this.boutiqueService.getBoutiqueById(boutiqueId).subscribe(boutique => {
         if (boutique) {
           this.selectedBoutique.set(boutique);
