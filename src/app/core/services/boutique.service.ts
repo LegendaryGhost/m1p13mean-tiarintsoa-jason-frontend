@@ -1,24 +1,19 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { Boutique } from '../models';
-import { ApiService } from './api.service';
-import { ApiResponse } from '../models/api-response.interface';
+import { Injectable } from '@angular/core';
+import { BoutiqueBase, BoutiquePopulated } from '../models';
+import { CrudService } from './crud.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class BoutiqueService {
-  private apiService = inject(ApiService);
+export class BoutiqueService extends CrudService<BoutiqueBase, BoutiquePopulated> {
+  protected override endpoint = 'boutiques';
 
-  getBoutiqueById(id: string): Observable<Boutique | undefined> {
-    return this.apiService.get<ApiResponse<Boutique>>(`boutiques/${id}`).pipe(
-      map(response => response.data)
-    );
+  // Alias methods for backward compatibility
+  getAllBoutiques() {
+    return this.getAll();
   }
 
-  getAllBoutiques(): Observable<Boutique[]> {
-    return this.apiService.get<ApiResponse<Boutique[]>>('boutiques').pipe(
-      map(response => response.data)
-    );
+  getBoutiqueById(id: string) {
+    return this.getById(id);
   }
 }

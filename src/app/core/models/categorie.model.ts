@@ -1,4 +1,5 @@
-export interface Categorie {
+// Categorie has no references, so Base and Populated are the same
+export interface CategorieBase {
   _id: string;
   nom: string;
   description: string;
@@ -7,3 +8,6 @@ export interface Categorie {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// For consistency, we use the same type for both
+export type Categorie = CategorieBase;

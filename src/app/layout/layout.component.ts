@@ -146,7 +146,7 @@ interface SidebarItem {
 
     .sidebar-header {
       padding: 1rem;
-      border-bottom: 1px solid var(--color-border);
+      border-bottom: 2px solid var(--color-border);
       display: flex;
       justify-content: flex-end;
     }
@@ -155,7 +155,7 @@ interface SidebarItem {
       background: transparent;
       border: none;
       cursor: pointer;
-      padding: 0.5rem;
+      padding: 0.6rem;
       border-radius: 4px;
       color: var(--color-text-secondary);
       display: flex;

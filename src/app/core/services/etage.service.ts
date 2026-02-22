@@ -1,24 +1,19 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { Etage } from '../models';
-import { ApiService } from './api.service';
-import { ApiResponse } from '../models/api-response.interface';
+import { Injectable } from '@angular/core';
+import { EtageBase } from '../models';
+import { CrudService } from './crud.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class EtageService {
-  private apiService = inject(ApiService);
+export class EtageService extends CrudService<EtageBase, EtageBase> {
+  protected override endpoint = 'etages';
 
-  getEtages(): Observable<Etage[]> {
-    return this.apiService.get<ApiResponse<Etage[]>>('etages').pipe(
-      map(response => response.data)
-    );
+  // Alias methods for backward compatibility
+  getEtages() {
+    return this.getAll();
   }
 
-  getEtageById(id: string): Observable<Etage | undefined> {
-    return this.apiService.get<ApiResponse<Etage>>(`etages/${id}`).pipe(
-      map(response => response.data)
-    );
+  getEtageById(id: string) {
+    return this.getById(id);
   }
 }

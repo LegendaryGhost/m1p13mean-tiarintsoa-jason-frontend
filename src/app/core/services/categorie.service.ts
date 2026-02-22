@@ -1,24 +1,19 @@
-import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { Categorie } from '../models';
-import { ApiService } from './api.service';
-import { ApiResponse } from '../models/api-response.interface';
+import { Injectable } from '@angular/core';
+import { CategorieBase } from '../models';
+import { CrudService } from './crud.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class CategorieService {
-  private apiService = inject(ApiService);
+export class CategorieService extends CrudService<CategorieBase, CategorieBase> {
+  protected override endpoint = 'categories';
 
-  getAllCategories(): Observable<Categorie[]> {
-    return this.apiService.get<ApiResponse<Categorie[]>>('categories').pipe(
-      map(response => response.data)
-    );
+  // Alias methods for backward compatibility
+  getAllCategories() {
+    return this.getAll();
   }
 
-  getCategorieById(id: string): Observable<Categorie | undefined> {
-    return this.apiService.get<ApiResponse<Categorie>>(`categories/${id}`).pipe(
-      map(response => response.data)
-    );
+  getCategorieById(id: string) {
+    return this.getById(id);
   }
 }
