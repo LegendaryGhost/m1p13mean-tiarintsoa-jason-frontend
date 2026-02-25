@@ -9,13 +9,26 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 
-// Load environment variables from .env file
+// Load environment variables from .env file if it exists (local dev)
+// On platforms like Vercel, env vars are injected directly into process.env
 const envPath = path.resolve(__dirname, '../.env');
-const envConfig = dotenv.config({ path: envPath });
 
-if (envConfig.error) {
-  console.error('❌ Error loading .env file:', envConfig.error.message);
-  console.log('ℹ️  Make sure you have a .env file in the root directory.');
+if (fs.existsSync(envPath)) {
+  const envConfig = dotenv.config({ path: envPath });
+  if (envConfig.error) {
+    console.error('❌ Error loading .env file:', envConfig.error.message);
+    process.exit(1);
+  }
+  console.log('ℹ️  Loaded environment variables from .env file.');
+} else {
+  console.log('ℹ️  No .env file found — using environment variables from the host (e.g. Vercel).');
+}
+
+// Validate required variables are present (from either source)
+const requiredVars = ['API_URL'];
+const missingVars = requiredVars.filter((key) => !process.env[key]);
+if (missingVars.length > 0) {
+  console.error(`❌ Missing required environment variables: ${missingVars.join(', ')}`);
   console.log('ℹ️  You can copy .env.example to .env and update the values.');
   process.exit(1);
 }
