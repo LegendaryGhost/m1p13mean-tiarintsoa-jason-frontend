@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:3000/api'
+  apiUrl: 'https://m1p13mean-tiarintsoa-jason-backend.onrender.com/'
 };
