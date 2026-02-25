@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { User } from '../models/user.model';
+import { environment } from '../../../environments/environment';
 
 interface UserCredentials {
   email: string;
@@ -23,7 +24,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
-  private apiUrl = 'http://localhost:3000/api/auth';
+  private apiUrl = environment.apiUrl || 'http://localhost:3000/api';
 
   // Using Signals for synchronous access to auth state across the app
   currentUser = signal<User | null>(this.getUserFromStorage());
