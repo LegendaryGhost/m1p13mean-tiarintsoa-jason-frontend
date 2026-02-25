@@ -31,7 +31,7 @@ export class AuthService {
   isAuthenticated = computed(() => !!this.currentUser());
 
   loginAdmin(credentials: UserCredentials) {
-    return this.http.post<any>(`${this.apiUrl}/admin/login`, credentials).pipe(
+    return this.http.post<any>(`${this.apiUrl}/auth/admin/login`, credentials).pipe(
       tap(res => {
         const { token, user } = res.data;
         this.handleAuth(token, user);
@@ -40,7 +40,7 @@ export class AuthService {
   }
 
   login(credentials: UserCredentials) {
-    return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
+    return this.http.post<any>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(res => {
         const { token, user } = res.data;
         this.handleAuth(token, user);
@@ -49,7 +49,7 @@ export class AuthService {
   }
 
   register(data: RegisterData) {
-    return this.http.post<any>(`${this.apiUrl}/register`, data).pipe(
+    return this.http.post<any>(`${this.apiUrl}/auth/register`, data).pipe(
       tap(res => {
         const { token, user } = res.data;
       })
