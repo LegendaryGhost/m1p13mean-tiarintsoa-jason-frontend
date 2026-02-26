@@ -256,15 +256,11 @@
     <!-- Preview -->
     <div class="preview-section">
       <p class="preview-label">Aperçu</p>
-      <span
-        class="preview-badge"
-        [style.background-color]="(form.get('couleur')?.value || '#1976D2') + '22'"
-        [style.color]="form.get('couleur')?.value || '#1976D2'"
-        [style.border-color]="(form.get('couleur')?.value || '#1976D2') + '55'"
-      >
-        <i [class]="getIconClass(form.get('icon')?.value || 'pi-tag')"></i>
-        {{ form.get('nom')?.value || 'Nom de la catégorie' }}
-      </span>
+      <p-tag
+        [value]="form.get('nom')?.value || 'Nom de la catégorie'"
+        [icon]="getIconClass(form.get('icon')?.value || 'pi-tag')"
+        [style]="{ 'background-color': form.get('couleur')?.value || '#1976D2', 'color': 'white', 'font-size': '0.9rem' }"
+      />
     </div>
 
   </form>

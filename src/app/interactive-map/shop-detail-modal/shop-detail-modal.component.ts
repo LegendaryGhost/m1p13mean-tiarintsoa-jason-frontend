@@ -29,7 +29,11 @@ import { Boutique, BoutiquePopulated, Categorie } from '../../core/models';
             <div class="shop-title">
               <h2>{{ shop.nom }}</h2>
               @if (boutique()?.categorieId; as cat) {
-                <p-tag [value]="cat.nom" [style]="{ 'background-color': cat.couleur, 'color': 'white' }"></p-tag>
+                <p-tag
+                  [value]="cat.nom"
+                  [icon]="getIconClass(cat.icon)"
+                  [style]="{ 'background-color': cat.couleur, 'color': 'white' }"
+                />
               }
             </div>
           </div>
@@ -169,6 +173,10 @@ export class ShopDetailModalComponent {
 
   onVisibleChange(visible: boolean): void {
     this.visibleChange.emit(visible);
+  }
+
+  getIconClass(icon: string): string {
+    return icon?.startsWith('pi ') ? icon : `pi ${icon}`;
   }
 
   formatJours(jours: string[]): string {

@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { map, startWith } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -110,11 +112,17 @@ export class CategoriesComponent implements OnInit {
     value: icon,
   }));
 
-  /** Derived hex value fed into the colorpicker (strips leading '#') */
-  colorPickerValue = computed(() => {
-    const val: string = this.form.get('couleur')?.value ?? '#1976D2';
-    return val.startsWith('#') ? val.slice(1) : val;
-  });
+  /** Hex value fed into the colorpicker — reacts to text input changes */
+  colorPickerValue = toSignal(
+    this.form.get('couleur')!.valueChanges.pipe(
+      startWith(this.form.get('couleur')!.value as string),
+      map((val: string) => {
+        if (!val || !/^#[0-9A-Fa-f]{6}$/i.test(val)) return '1976D2';
+        return val.startsWith('#') ? val.slice(1) : val;
+      }),
+    ),
+    { initialValue: '1976D2' },
+  );
 
   /** Sync color picker -> hex text control */
   onColorPickerChange(hex: string) {
