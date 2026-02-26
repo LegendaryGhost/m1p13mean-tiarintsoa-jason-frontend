@@ -210,8 +210,8 @@ export class AdminLoginComponent {
 
   // Component State using Signals
   email = signal('admin@centrecommercial.mg');
-  password = signal('');
-  passwordValue = '';
+  password = signal('password123');
+  passwordValue = 'password123';
   isLoading = signal(false);
   errorMessage = signal('');
 
