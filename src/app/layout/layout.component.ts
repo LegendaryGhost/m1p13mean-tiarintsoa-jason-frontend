@@ -61,6 +61,9 @@ interface SidebarItem {
         <!-- Header -->
         <header class="main-header">
           <div class="header-left">
+            <button class="hamburger-button" (click)="toggleSidebar()" aria-label="Ouvrir le menu">
+              <i class="pi pi-bars"></i>
+            </button>
             <i class="pi pi-building header-icon"></i>
             <h1>{{ mallName() }}</h1>
           </div>
@@ -71,6 +74,15 @@ interface SidebarItem {
 
             @if (!authService.isAuthenticated()) {
               <p-button
+                class="btn-icon-only"
+                icon="pi pi-sign-in"
+                pTooltip="Me connecter"
+                tooltipPosition="bottom"
+                (onClick)="navigateToLogin()"
+                [outlined]="true">
+              </p-button>
+              <p-button
+                class="btn-full-label"
                 label="Me connecter"
                 icon="pi pi-sign-in"
                 (onClick)="navigateToLogin()"
@@ -81,6 +93,15 @@ interface SidebarItem {
                 <span class="user-welcome">Bienvenue, {{ user.nom }}</span>
                 @if (user.role === 'boutique') {
                   <p-button
+                    class="btn-icon-only"
+                    icon="pi pi-th-large"
+                    pTooltip="Tableau de bord"
+                    tooltipPosition="bottom"
+                    (onClick)="navigateToDashboard()"
+                    severity="secondary">
+                  </p-button>
+                  <p-button
+                    class="btn-full-label"
                     label="Tableau de bord"
                     icon="pi pi-th-large"
                     (onClick)="navigateToDashboard()"
@@ -89,6 +110,15 @@ interface SidebarItem {
                 }
                 @if (user.role === 'admin') {
                   <p-button
+                    class="btn-icon-only"
+                    icon="pi pi-cog"
+                    pTooltip="Administration"
+                    tooltipPosition="bottom"
+                    (onClick)="navigateToAdmin()"
+                    severity="secondary">
+                  </p-button>
+                  <p-button
+                    class="btn-full-label"
                     label="Administration"
                     icon="pi pi-cog"
                     (onClick)="navigateToAdmin()"
@@ -96,11 +126,21 @@ interface SidebarItem {
                   </p-button>
                 }
                 <p-button
+                  class="btn-icon-only"
+                  icon="pi pi-sign-out"
+                  pTooltip="Se déconnecter"
+                  tooltipPosition="bottom"
+                  (onClick)="authService.logout()"
+                  severity="danger"
+                  [outlined]="true">
+                </p-button>
+                <p-button
+                  class="btn-full-label"
                   label="Se déconnecter"
                   icon="pi pi-sign-out"
                   (onClick)="authService.logout()"
-                  [text]="true"
-                  severity="secondary">
+                  severity="danger"
+                  [outlined]="true">
                 </p-button>
               }
             }
@@ -113,7 +153,13 @@ interface SidebarItem {
         </main>
       </div>
     </div>
+
+    <!-- Mobile overlay -->
+    @if (!isSidebarCollapsed()) {
+      <div class="sidebar-overlay" (click)="closeSidebarOnMobile()"></div>
+    }
   `,
+
   styles: [`
     .layout-container {
       display: flex;
@@ -290,32 +336,86 @@ interface SidebarItem {
       overflow: auto;
     }
 
+    .hamburger-button {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      color: var(--color-text-secondary);
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--color-background-tertiary);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+
+      i { font-size: 1.25rem; color: inherit; }
+    }
+
+    .sidebar-overlay {
+      display: none;
+    }
+
+    .btn-icon-only { display: none; }
+    .btn-full-label { display: inline-flex; }
+
     /* Responsive Design */
     @media (max-width: 768px) {
+      .hamburger-button {
+        display: flex;
+      }
+
+      .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+      }
+
       .sidebar {
         position: fixed;
         left: 0;
         top: 0;
         bottom: 0;
         z-index: 1000;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        width: 240px !important;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
 
         &.collapsed {
           transform: translateX(-100%);
         }
       }
 
+      .sidebar-header {
+        display: none;
+      }
+
       .main-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+
+      .header-left h1 {
+        font-size: 1.1rem;
       }
 
       .header-right {
-        flex-wrap: wrap;
-        width: 100%;
+        gap: 0.5rem;
+
+        .user-welcome {
+          display: none;
+        }
       }
+
+      .btn-icon-only { display: inline-flex; }
+      .btn-full-label { display: none; }
     }
   `]
 })
@@ -326,7 +426,7 @@ export class LayoutComponent {
   themeService = inject(ThemeService);
 
   // Sidebar state
-  isSidebarCollapsed = signal<boolean>(false);
+  isSidebarCollapsed = signal<boolean>(typeof window !== 'undefined' && window.innerWidth <= 768);
 
   // Computed values
   mallName = computed(() => this.mockDataService.centreCommercial().nom);
@@ -355,5 +455,11 @@ export class LayoutComponent {
 
   navigateToAdmin(): void {
     this.router.navigate(['/back-office']);
+  }
+
+  closeSidebarOnMobile(): void {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      this.isSidebarCollapsed.set(true);
+    }
   }
 }

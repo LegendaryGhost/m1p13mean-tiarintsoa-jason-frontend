@@ -73,6 +73,9 @@ interface SidebarItem {
         <!-- Header -->
         <header class="main-header">
           <div class="header-left">
+            <button class="hamburger-button" (click)="toggleSidebar()" aria-label="Ouvrir le menu">
+              <i class="pi pi-bars"></i>
+            </button>
             <i class="pi pi-cog header-icon"></i>
             <h1>Administration</h1>
           </div>
@@ -91,17 +94,36 @@ interface SidebarItem {
             @if (authService.currentUser(); as user) {
               <span class="user-welcome">{{ user.nom }} (Admin)</span>
               <p-button
+                class="btn-icon-only"
+                icon="pi pi-external-link"
+                pTooltip="Voir le site"
+                tooltipPosition="bottom"
+                (onClick)="navigateToPublicSite()"
+                [outlined]="true">
+              </p-button>
+              <p-button
+                class="btn-full-label"
                 label="Voir le site"
                 icon="pi pi-external-link"
                 (onClick)="navigateToPublicSite()"
                 [outlined]="true">
               </p-button>
               <p-button
+                class="btn-icon-only"
+                icon="pi pi-sign-out"
+                pTooltip="Se déconnecter"
+                tooltipPosition="bottom"
+                (onClick)="authService.logout()"
+                severity="danger"
+                [outlined]="true">
+              </p-button>
+              <p-button
+                class="btn-full-label"
                 label="Se déconnecter"
                 icon="pi pi-sign-out"
                 (onClick)="authService.logout()"
-                [text]="true"
-                severity="secondary">
+                severity="danger"
+                [outlined]="true">
               </p-button>
             }
           </div>
@@ -113,7 +135,13 @@ interface SidebarItem {
         </main>
       </div>
     </div>
+
+    <!-- Mobile overlay -->
+    @if (!isSidebarCollapsed()) {
+      <div class="sidebar-overlay" (click)="closeSidebarOnMobile()"></div>
+    }
   `,
+
   styles: [`
     .layout-container {
       display: flex;
@@ -364,32 +392,86 @@ interface SidebarItem {
       overflow: auto;
     }
 
+    .hamburger-button {
+      display: none;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      color: var(--color-text-secondary);
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--color-background-tertiary);
+        border-color: var(--color-warning);
+        color: var(--color-warning);
+      }
+
+      i { font-size: 1.25rem; color: inherit; }
+    }
+
+    .sidebar-overlay {
+      display: none;
+    }
+
+    .btn-icon-only { display: none; }
+    .btn-full-label { display: inline-flex; }
+
     /* Responsive Design */
     @media (max-width: 768px) {
+      .hamburger-button {
+        display: flex;
+      }
+
+      .sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 999;
+      }
+
       .sidebar {
         position: fixed;
         left: 0;
         top: 0;
         bottom: 0;
         z-index: 1000;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        width: 260px !important;
+        transform: translateX(0);
+        transition: transform 0.3s ease;
 
         &.collapsed {
           transform: translateX(-100%);
         }
       }
 
+      .sidebar-header {
+        display: none;
+      }
+
       .main-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1rem;
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+
+      .header-left h1 {
+        font-size: 1.1rem;
       }
 
       .header-right {
-        flex-wrap: wrap;
-        width: 100%;
+        gap: 0.5rem;
+
+        .user-welcome {
+          display: none;
+        }
       }
+
+      .btn-icon-only { display: inline-flex; }
+      .btn-full-label { display: none; }
     }
   `]
 })
@@ -400,7 +482,7 @@ export class AdminLayoutComponent {
   private isBrowser = isPlatformBrowser(this.platformId);
 
   // Sidebar state
-  isSidebarCollapsed = signal<boolean>(false);
+  isSidebarCollapsed = signal<boolean>(this.isBrowser && window.innerWidth <= 768);
 
   // Theme state
   currentTheme = signal<'light' | 'dark'>(this.getInitialTheme());
@@ -492,5 +574,11 @@ export class AdminLayoutComponent {
 
   navigateToPublicSite(): void {
     this.router.navigate(['/']);
+  }
+
+  closeSidebarOnMobile(): void {
+    if (this.isBrowser && window.innerWidth <= 768) {
+      this.isSidebarCollapsed.set(true);
+    }
   }
 }
