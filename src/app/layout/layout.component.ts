@@ -3,16 +3,16 @@ import {
   ChangeDetectionStrategy,
   inject,
   signal,
-  computed,
-  effect,
-  PLATFORM_ID
+  computed
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../core/services/auth.service';
 import { MockDataService } from '../core/services/mock-data.service';
+import { ThemeService } from '../core/services/theme.service';
+import { ThemeToggleComponent } from '../shared/components/theme-toggle/theme-toggle.component';
 
 interface SidebarItem {
   icon: string;
@@ -23,7 +23,7 @@ interface SidebarItem {
 
 @Component({
   selector: 'app-layout',
-  imports: [CommonModule, RouterModule, ButtonModule, TooltipModule],
+  imports: [CommonModule, RouterModule, ButtonModule, TooltipModule, ThemeToggleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="layout-container">
@@ -67,14 +67,7 @@ interface SidebarItem {
 
           <div class="header-right">
             <!-- Theme Switcher -->
-            <button
-              class="theme-toggle"
-              (click)="toggleTheme()"
-              [pTooltip]="currentTheme() === 'dark' ? 'Mode clair' : 'Mode sombre'"
-              tooltipPosition="bottom"
-              [attr.aria-label]="currentTheme() === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'">
-              <i [class]="currentTheme() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"></i>
-            </button>
+            <app-theme-toggle />
 
             @if (!authService.isAuthenticated()) {
               <p-button
@@ -289,33 +282,7 @@ interface SidebarItem {
       }
     }
 
-    .theme-toggle {
-      background: var(--color-background-primary);
-      border: 1px solid var(--color-border);
-      cursor: pointer;
-      padding: 0.625rem;
-      border-radius: 8px;
-      color: var(--color-text-secondary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      width: 40px;
-      height: 40px;
-      box-shadow: 0 2px 4px color-mix(in srgb, var(--color-primary) 5%, transparent);
 
-      &:hover {
-        background: var(--color-background-tertiary);
-        border-color: var(--color-primary);
-        color: var(--color-primary);
-        box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 15%, transparent);
-      }
-
-      i {
-        font-size: 1.125rem;
-        color: inherit;
-      }
-    }
 
     /* Main Content */
     .main-content {
@@ -356,14 +323,10 @@ export class LayoutComponent {
   authService = inject(AuthService);
   private router = inject(Router);
   private mockDataService = inject(MockDataService);
-  private platformId = inject(PLATFORM_ID);
-  private isBrowser = isPlatformBrowser(this.platformId);
+  themeService = inject(ThemeService);
 
   // Sidebar state
   isSidebarCollapsed = signal<boolean>(false);
-
-  // Theme state
-  currentTheme = signal<'light' | 'dark'>(this.getInitialTheme());
 
   // Computed values
   mallName = computed(() => this.mockDataService.centreCommercial().nom);
@@ -377,41 +340,6 @@ export class LayoutComponent {
       tooltip: 'Plan interactif du centre commercial'
     }
   ]);
-
-  constructor() {
-    // Apply theme on change
-    if (this.isBrowser) {
-      effect(() => {
-        const theme = this.currentTheme();
-        this.applyTheme(theme);
-      });
-    }
-  }
-
-  private getInitialTheme(): 'light' | 'dark' {
-    if (!this.isBrowser) return 'light';
-
-    // Check localStorage first
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark' || stored === 'light') {
-      return stored;
-    }
-
-    // Fall back to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  private applyTheme(theme: 'light' | 'dark'): void {
-    if (!this.isBrowser) return;
-
-    const root = document.documentElement;
-    root.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }
-
-  toggleTheme(): void {
-    this.currentTheme.update(theme => theme === 'dark' ? 'light' : 'dark');
-  }
 
   toggleSidebar(): void {
     this.isSidebarCollapsed.update(collapsed => !collapsed);

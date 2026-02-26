@@ -7,6 +7,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { FormsModule } from '@angular/forms';
+import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-admin-login',
@@ -17,11 +18,13 @@ import { FormsModule } from '@angular/forms';
     ButtonModule,
     MessageModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    ThemeToggleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="admin-login-wrapper">
+      <app-theme-toggle [standalone]="true" />
       <p-card header="Back-Office">
         <p class="subtitle">Espace administration du centre commercial</p>
 
@@ -46,7 +49,7 @@ import { FormsModule } from '@angular/forms';
             placeholder="Mot de passe sécurisé"
             [toggleMask]="true"
             [feedback]="false"
-            styleClass="w-full">
+            class="w-full">
             <ng-template pTemplate="input">
               <input
                 pPassword
@@ -63,10 +66,10 @@ import { FormsModule } from '@angular/forms';
           (onClick)="onSubmit()"
           [disabled]="isLoading()"
           [loading]="isLoading()"
-          styleClass="w-full" />
+          class="w-full" />
 
         @if (errorMessage()) {
-          <p-message severity="error" [text]="errorMessage()" styleClass="w-full mt-3" />
+          <p-message severity="error" [text]="errorMessage()" class="w-full mt-3" />
         }
 
         <div class="map-link">
@@ -77,6 +80,7 @@ import { FormsModule } from '@angular/forms';
   `,
   styles: [`
     .admin-login-wrapper {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -141,7 +145,7 @@ import { FormsModule } from '@angular/forms';
     :host ::ng-deep .p-password input {
       width: 100%;
       border-color: var(--color-border);
-      color: var(--color-text-primary);
+      color: var(--text-primary);
     }
 
     :host ::ng-deep .p-password input:enabled:focus {
@@ -205,7 +209,7 @@ export class AdminLoginComponent {
   private router = inject(Router);
 
   // Component State using Signals
-  email = signal('');
+  email = signal('admin@centrecommercial.mg');
   password = signal('');
   passwordValue = '';
   isLoading = signal(false);
