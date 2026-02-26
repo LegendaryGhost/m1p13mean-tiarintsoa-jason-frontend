@@ -1,14 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TextareaModule } from 'primeng/textarea';
@@ -24,13 +27,17 @@ import { CategorieService } from '../../../core/services/categorie.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     ButtonModule,
     CardModule,
     ColorPickerModule,
     ConfirmDialogModule,
     DialogModule,
+    InputGroupModule,
+    InputGroupAddonModule,
     InputTextModule,
     MessageModule,
+    SelectModule,
     TableModule,
     TagModule,
     TextareaModule,
@@ -96,6 +103,25 @@ export class CategoriesComponent implements OnInit {
     'pi-sun',
     'pi-moon',
   ];
+
+  /** Options for the icon p-select */
+  iconOptions = this.availableIcons.map((icon) => ({
+    label: icon.replace('pi-', ''),
+    value: icon,
+  }));
+
+  /** Derived hex value fed into the colorpicker (strips leading '#') */
+  colorPickerValue = computed(() => {
+    const val: string = this.form.get('couleur')?.value ?? '#1976D2';
+    return val.startsWith('#') ? val.slice(1) : val;
+  });
+
+  /** Sync color picker -> hex text control */
+  onColorPickerChange(hex: string) {
+    const normalized = hex.startsWith('#') ? hex : `#${hex}`;
+    this.form.get('couleur')?.setValue(normalized, { emitEvent: true });
+    this.form.get('couleur')?.markAsDirty();
+  }
 
   ngOnInit() {
     this.loadCategories();

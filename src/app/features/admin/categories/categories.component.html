@@ -139,9 +139,9 @@
   [draggable]="false"
   [resizable]="false"
   styleClass="categorie-dialog"
-  [style]="{ width: '480px' }"
+  [style]="{ width: '520px' }"
 >
-  <form [formGroup]="form" (ngSubmit)="saveCategorie()" class="categorie-form">
+  <form [formGroup]="form" (ngSubmit)="saveCategorie()" class="categorie-form" autocomplete="off">
 
     <!-- Nom -->
     <div class="form-group">
@@ -154,12 +154,15 @@
         formControlName="nom"
         placeholder="Ex. : Alimentaire"
         class="w-full"
+        autocomplete="off"
         [class.ng-invalid]="isFieldInvalid('nom')"
         [attr.aria-invalid]="isFieldInvalid('nom')"
         aria-required="true"
       />
       @if (isFieldInvalid('nom')) {
-        <p-message severity="error" [text]="form.get('nom')?.hasError('required') ? 'Le nom est requis.' : 'Minimum 2 caractères.'" />
+        <small class="field-error">
+          {{ form.get('nom')?.hasError('required') ? 'Le nom est requis.' : 'Minimum 2 caractères.' }}
+        </small>
       }
     </div>
 
@@ -174,6 +177,7 @@
         class="w-full"
         [rows]="3"
         [autoResize]="true"
+        autocomplete="off"
       ></textarea>
     </div>
 
@@ -185,54 +189,65 @@
         <label for="cat-icon" class="form-label">
           Icône <span class="required" aria-hidden="true">*</span>
         </label>
-        <div class="input-group">
-          <span class="input-group-addon">
-            <i [class]="getIconClass(form.get('icon')?.value || 'pi-tag')"></i>
-          </span>
-          <select
-            id="cat-icon"
-            formControlName="icon"
-            class="icon-select"
-            [class.ng-invalid]="isFieldInvalid('icon')"
-            aria-required="true"
-          >
-            @for (icon of availableIcons; track icon) {
-              <option [value]="icon">{{ icon }}</option>
-            }
-          </select>
-        </div>
+        <p-select
+          inputId="cat-icon"
+          formControlName="icon"
+          [options]="iconOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Choisir une icône"
+          styleClass="w-full"
+          appendTo="body"
+          [class.ng-invalid]="isFieldInvalid('icon')"
+          aria-required="true"
+        >
+          <ng-template #selectedItem let-selected>
+            <div class="icon-option">
+              <i [class]="getIconClass(selected.value)"></i>
+              <span>{{ " " + selected.label }}</span>
+            </div>
+          </ng-template>
+          <ng-template #item let-opt>
+            <div class="icon-option">
+              <i [class]="getIconClass(opt.value)"></i>
+              <span>{{ " " + opt.label }}</span>
+            </div>
+          </ng-template>
+        </p-select>
         @if (isFieldInvalid('icon')) {
-          <p-message severity="error" text="L'icône est requise." />
+          <small class="field-error">L'icône est requise.</small>
         }
       </div>
 
       <!-- Color -->
       <div class="form-group">
-        <label for="cat-couleur" class="form-label">
+        <label for="cat-couleur-hex" class="form-label">
           Couleur <span class="required" aria-hidden="true">*</span>
         </label>
-        <div class="input-group">
-          <span class="input-group-addon">
+        <p-inputgroup class="w-full">
+          <p-inputgroup-addon>
             <p-colorpicker
-              formControlName="couleur"
+              [ngModel]="colorPickerValue()"
+              (ngModelChange)="onColorPickerChange($event)"
+              [ngModelOptions]="{ standalone: true }"
               [inline]="false"
-              inputId="cat-couleur"
               appendTo="body"
+              aria-label="Sélecteur de couleur"
             />
-          </span>
+          </p-inputgroup-addon>
           <input
             pInputText
             id="cat-couleur-hex"
             formControlName="couleur"
             placeholder="#1976D2"
-            class="w-full"
             [class.ng-invalid]="isFieldInvalid('couleur')"
             [attr.aria-invalid]="isFieldInvalid('couleur')"
+            aria-required="true"
             aria-label="Valeur hexadécimale de la couleur"
           />
-        </div>
+        </p-inputgroup>
         @if (isFieldInvalid('couleur')) {
-          <p-message severity="error" text="Format invalide. Utilisez #RRGGBB." />
+          <small class="field-error">Format invalide. Utilisez #RRGGBB.</small>
         }
       </div>
 
