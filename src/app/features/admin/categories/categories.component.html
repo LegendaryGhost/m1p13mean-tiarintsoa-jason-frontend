@@ -1,0 +1,274 @@
+<div class="categories-container">
+  <p-toast />
+  <p-confirmDialog />
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <div class="card-header-title">
+          <i class="pi pi-list header-icon"></i>
+          <div>
+            <h1>Gestion des catégories</h1>
+            <p class="header-subtitle">{{ categories().length }} catégorie(s) au total</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <p-button
+            label="Actualiser"
+            icon="pi pi-refresh"
+            [loading]="loading()"
+            (onClick)="loadCategories()"
+            [outlined]="true"
+            severity="secondary"
+          />
+          <p-button
+            label="Nouvelle catégorie"
+            icon="pi pi-plus"
+            (onClick)="openCreateDialog()"
+          />
+        </div>
+      </div>
+    </ng-template>
+
+    @if (loading()) {
+      <div class="loading-container">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Chargement des catégories...</p>
+      </div>
+    } @else if (categories().length === 0) {
+      <div class="empty-state">
+        <i class="pi pi-list empty-icon"></i>
+        <h2>Aucune catégorie</h2>
+        <p>Commencez par créer votre première catégorie.</p>
+        <p-button
+          label="Créer une catégorie"
+          icon="pi pi-plus"
+          (onClick)="openCreateDialog()"
+        />
+      </div>
+    } @else {
+      <p-table
+        [value]="categories()"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        styleClass="p-datatable-striped"
+        [paginator]="categories().length > 10"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Icône</th>
+            <th pSortableColumn="nom">
+              Nom <p-sortIcon field="nom" />
+            </th>
+            <th>Description</th>
+            <th>Couleur</th>
+            <th pSortableColumn="createdAt">
+              Créée le <p-sortIcon field="createdAt" />
+            </th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-categorie>
+          <tr>
+            <td class="col-icon">
+              <span
+                class="category-icon-badge"
+                [style.background-color]="categorie.couleur + '22'"
+                [style.color]="categorie.couleur"
+                [style.border-color]="categorie.couleur + '55'"
+              >
+                <i [class]="getIconClass(categorie.icon)"></i>
+              </span>
+            </td>
+            <td>
+              <span class="category-name">{{ categorie.nom }}</span>
+            </td>
+            <td>
+              <span class="category-description">
+                {{ categorie.description || '—' }}
+              </span>
+            </td>
+            <td class="col-color">
+              <div class="color-preview-group">
+                <span
+                  class="color-swatch"
+                  [style.background-color]="categorie.couleur"
+                  [attr.aria-label]="'Couleur: ' + categorie.couleur"
+                ></span>
+                <code class="color-code">{{ categorie.couleur }}</code>
+              </div>
+            </td>
+            <td>{{ formatDate(categorie.createdAt) }}</td>
+            <td>
+              <div class="action-buttons">
+                <p-button
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  [outlined]="true"
+                  pTooltip="Modifier"
+                  tooltipPosition="top"
+                  (onClick)="openEditDialog(categorie)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [outlined]="true"
+                  severity="danger"
+                  pTooltip="Supprimer"
+                  tooltipPosition="top"
+                  (onClick)="confirmDelete(categorie)"
+                />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </p-card>
+</div>
+
+<!-- Create / Edit Dialog -->
+<p-dialog
+  [header]="isEditing() ? 'Modifier la catégorie' : 'Nouvelle catégorie'"
+  [visible]="dialogVisible()"
+  (visibleChange)="$event ? null : closeDialog()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="categorie-dialog"
+  [style]="{ width: '480px' }"
+>
+  <form [formGroup]="form" (ngSubmit)="saveCategorie()" class="categorie-form">
+
+    <!-- Nom -->
+    <div class="form-group">
+      <label for="cat-nom" class="form-label">
+        Nom <span class="required" aria-hidden="true">*</span>
+      </label>
+      <input
+        pInputText
+        id="cat-nom"
+        formControlName="nom"
+        placeholder="Ex. : Alimentaire"
+        class="w-full"
+        [class.ng-invalid]="isFieldInvalid('nom')"
+        [attr.aria-invalid]="isFieldInvalid('nom')"
+        aria-required="true"
+      />
+      @if (isFieldInvalid('nom')) {
+        <p-message severity="error" [text]="form.get('nom')?.hasError('required') ? 'Le nom est requis.' : 'Minimum 2 caractères.'" />
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="cat-description" class="form-label">Description</label>
+      <textarea
+        pTextarea
+        id="cat-description"
+        formControlName="description"
+        placeholder="Description facultative de la catégorie"
+        class="w-full"
+        [rows]="3"
+        [autoResize]="true"
+      ></textarea>
+    </div>
+
+    <!-- Icon & Color row -->
+    <div class="form-row">
+
+      <!-- Icon -->
+      <div class="form-group">
+        <label for="cat-icon" class="form-label">
+          Icône <span class="required" aria-hidden="true">*</span>
+        </label>
+        <div class="input-group">
+          <span class="input-group-addon">
+            <i [class]="getIconClass(form.get('icon')?.value || 'pi-tag')"></i>
+          </span>
+          <select
+            id="cat-icon"
+            formControlName="icon"
+            class="icon-select"
+            [class.ng-invalid]="isFieldInvalid('icon')"
+            aria-required="true"
+          >
+            @for (icon of availableIcons; track icon) {
+              <option [value]="icon">{{ icon }}</option>
+            }
+          </select>
+        </div>
+        @if (isFieldInvalid('icon')) {
+          <p-message severity="error" text="L'icône est requise." />
+        }
+      </div>
+
+      <!-- Color -->
+      <div class="form-group">
+        <label for="cat-couleur" class="form-label">
+          Couleur <span class="required" aria-hidden="true">*</span>
+        </label>
+        <div class="input-group">
+          <span class="input-group-addon">
+            <p-colorpicker
+              formControlName="couleur"
+              [inline]="false"
+              inputId="cat-couleur"
+              appendTo="body"
+            />
+          </span>
+          <input
+            pInputText
+            id="cat-couleur-hex"
+            formControlName="couleur"
+            placeholder="#1976D2"
+            class="w-full"
+            [class.ng-invalid]="isFieldInvalid('couleur')"
+            [attr.aria-invalid]="isFieldInvalid('couleur')"
+            aria-label="Valeur hexadécimale de la couleur"
+          />
+        </div>
+        @if (isFieldInvalid('couleur')) {
+          <p-message severity="error" text="Format invalide. Utilisez #RRGGBB." />
+        }
+      </div>
+
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-section">
+      <p class="preview-label">Aperçu</p>
+      <span
+        class="preview-badge"
+        [style.background-color]="(form.get('couleur')?.value || '#1976D2') + '22'"
+        [style.color]="form.get('couleur')?.value || '#1976D2'"
+        [style.border-color]="(form.get('couleur')?.value || '#1976D2') + '55'"
+      >
+        <i [class]="getIconClass(form.get('icon')?.value || 'pi-tag')"></i>
+        {{ form.get('nom')?.value || 'Nom de la catégorie' }}
+      </span>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <p-button
+        label="Annuler"
+        icon="pi pi-times"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="closeDialog()"
+      />
+      <p-button
+        [label]="isEditing() ? 'Enregistrer' : 'Créer'"
+        [icon]="isEditing() ? 'pi pi-check' : 'pi pi-plus'"
+        [loading]="saving()"
+        (onClick)="saveCategorie()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
