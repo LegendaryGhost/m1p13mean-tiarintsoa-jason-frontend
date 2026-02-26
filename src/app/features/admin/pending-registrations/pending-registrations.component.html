@@ -1,82 +1,33 @@
 <div class="pending-registrations-container">
   <p-toast />
   <p-confirmDialog />
-  
+
   <p-card>
     <ng-template pTemplate="header">
       <div class="card-header">
-        <h1>Demandes d'inscription en attente</h1>
+        <div class="card-header-title">
+          <i class="pi pi-clock header-icon" aria-hidden="true"></i>
+          <div>
+            <h1>Demandes d'inscription en attente</h1>
+            <p class="header-subtitle">{{ pendingUsers().length }} demande(s) en attente</p>
+          </div>
+        </div>
         <p-button
           label="Actualiser"
           icon="pi pi-refresh"
           [loading]="loading()"
           (onClick)="loadPendingUsers()"
-          styleClass="p-button-outlined"
+          [outlined]="true"
+          severity="secondary"
         />
       </div>
     </ng-template>
 
-    @if (loading()) {
-      <div class="loading-container">
-        <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-        <p>Chargement des demandes...</p>
-      </div>
-    } @else if (pendingUsers().length === 0) {
-      <div class="empty-state">
-        <i class="pi pi-check-circle" style="font-size: 3rem; color: var(--color-success)"></i>
-        <h2>Aucune demande en attente</h2>
-        <p>Toutes les demandes d'inscription ont été traitées.</p>
-      </div>
-    } @else {
-      <p-table
-        [value]="pendingUsers()"
-        [tableStyle]="{ 'min-width': '50rem' }"
-        styleClass="p-datatable-striped"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Email</th>
-            <th>Date d'inscription</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-user>
-          <tr>
-            <td>{{ user.nom }}</td>
-            <td>{{ user.prenom }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ formatDate(user.createdAt) }}</td>
-            <td>
-              <p-tag severity="warn" value="En attente" icon="pi pi-clock" />
-            </td>
-            <td>
-              <div class="action-buttons">
-                <p-button
-                  icon="pi pi-check"
-                  [rounded]="true"
-                  severity="success"
-                  [outlined]="true"
-                  pTooltip="Approuver"
-                  tooltipPosition="top"
-                  (onClick)="approveBoutique(user)"
-                />
-                <p-button
-                  icon="pi pi-times"
-                  [rounded]="true"
-                  severity="danger"
-                  [outlined]="true"
-                  pTooltip="Rejeter"
-                  tooltipPosition="top"
-                  (onClick)="rejectBoutique(user)"
-                />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    }
+    <app-generic-list
+      [data]="pendingUsers()"
+      [loading]="loading()"
+      [config]="listConfig"
+    />
   </p-card>
 </div>
+

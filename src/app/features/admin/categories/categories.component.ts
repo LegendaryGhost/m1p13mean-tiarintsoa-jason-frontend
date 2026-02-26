@@ -1,50 +1,38 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { map, startWith } from 'rxjs';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { ColorPickerModule } from 'primeng/colorpicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
-import { InputGroupModule } from 'primeng/inputgroup';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputTextModule } from 'primeng/inputtext';
-import { MessageModule } from 'primeng/message';
-import { SelectModule } from 'primeng/select';
-import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { TextareaModule } from 'primeng/textarea';
 import { ToastModule } from 'primeng/toast';
-import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { CategorieBase } from '../../../core/models';
 import { CategorieService } from '../../../core/services/categorie.service';
+import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
+import { GenericFormDialogComponent } from '../../../shared/components/generic-form-dialog/generic-form-dialog.component';
+import { ListConfig } from '../../../shared/components/generic-list/generic-list.types';
+import { FieldDef } from '../../../shared/components/generic-form-dialog/generic-form-dialog.types';
 
 @Component({
   selector: 'app-categories',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     ButtonModule,
     CardModule,
-    ColorPickerModule,
     ConfirmDialogModule,
-    DialogModule,
-    InputGroupModule,
-    InputGroupAddonModule,
-    InputTextModule,
-    MessageModule,
-    SelectModule,
-    TableModule,
     TagModule,
-    TextareaModule,
     ToastModule,
-    TooltipModule,
+    GenericListComponent,
+    GenericFormDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './categories.component.html',
@@ -73,63 +61,88 @@ export class CategoriesComponent implements OnInit {
   });
 
   /** Common PrimeIcons available for categories */
-  availableIcons: string[] = [
-    'pi-tag',
-    'pi-shopping-bag',
-    'pi-shopping-cart',
-    'pi-box',
-    'pi-home',
-    'pi-star',
-    'pi-heart',
-    'pi-bookmark',
-    'pi-gift',
-    'pi-desktop',
-    'pi-mobile',
-    'pi-camera',
-    'pi-tablet',
-    'pi-headphones',
-    'pi-car',
-    'pi-briefcase',
-    'pi-palette',
-    'pi-book',
-    'pi-apple',
-    'pi-coffee',
-    'pi-building',
-    'pi-map-marker',
-    'pi-globe',
-    'pi-image',
-    'pi-user',
-    'pi-users',
-    'pi-chart-bar',
-    'pi-bolt',
-    'pi-sun',
-    'pi-moon',
+  private readonly availableIcons: string[] = [
+    'pi-tag', 'pi-shopping-bag', 'pi-shopping-cart', 'pi-box', 'pi-home',
+    'pi-star', 'pi-heart', 'pi-bookmark', 'pi-gift', 'pi-desktop',
+    'pi-mobile', 'pi-camera', 'pi-tablet', 'pi-headphones', 'pi-car',
+    'pi-briefcase', 'pi-palette', 'pi-book', 'pi-apple', 'pi-coffee',
+    'pi-building', 'pi-map-marker', 'pi-globe', 'pi-image', 'pi-user',
+    'pi-users', 'pi-chart-bar', 'pi-bolt', 'pi-sun', 'pi-moon',
   ];
 
-  /** Options for the icon p-select */
-  iconOptions = this.availableIcons.map((icon) => ({
-    label: icon.replace('pi-', ''),
-    value: icon,
-  }));
+  // ── List config ──────────────────────────────────────────────────
+  listConfig: ListConfig<CategorieBase> = {
+    paginator: true,
+    rows: 10,
+    rowsPerPageOptions: [10, 25, 50],
+    emptyMessage: 'Aucune catégorie',
+    emptyIcon: 'pi-list',
+    columns: [
+      {
+        field: 'icon',
+        header: 'Icône',
+        cellType: 'icon',
+        iconField: 'icon',
+        colorField: 'couleur',
+        width: '70px',
+      },
+      { field: 'nom', header: 'Nom', sortable: true, cellType: 'text' },
+      { field: 'description', header: 'Description', cellType: 'text' },
+      { field: 'couleur', header: 'Couleur', cellType: 'color', hexField: 'couleur', width: '160px' },
+      { field: 'createdAt', header: 'Créée le', sortable: true, cellType: 'date' },
+    ],
+    actions: [
+      {
+        icon: 'pi-pencil',
+        tooltip: 'Modifier',
+        action: (row) => this.openEditDialog(row),
+      },
+      {
+        icon: 'pi-trash',
+        severity: 'danger',
+        tooltip: 'Supprimer',
+        action: (row) => this.confirmDelete(row),
+      },
+    ],
+  };
 
-  /** Hex value fed into the colorpicker — reacts to text input changes */
-  colorPickerValue = toSignal(
-    this.form.get('couleur')!.valueChanges.pipe(
-      startWith(this.form.get('couleur')!.value as string),
-      map((val: string) => {
-        if (!val || !/^#[0-9A-Fa-f]{6}$/i.test(val)) return '1976D2';
-        return val.startsWith('#') ? val.slice(1) : val;
-      }),
-    ),
-    { initialValue: '1976D2' },
-  );
-
-  /** Sync color picker -> hex text control */
-  onColorPickerChange(hex: string) {
-    const normalized = hex.startsWith('#') ? hex : `#${hex}`;
-    this.form.get('couleur')?.setValue(normalized, { emitEvent: true });
-    this.form.get('couleur')?.markAsDirty();
-  }
+  // ── Form fields config ───────────────────────────────────────────
+  formFields: FieldDef[] = [
+    {
+      key: 'nom',
+      label: 'Nom',
+      type: 'text',
+      required: true,
+      placeholder: 'Ex. : Alimentaire',
+    },
+    {
+      key: 'description',
+      label: 'Description',
+      type: 'textarea',
+      placeholder: 'Description facultative de la catégorie',
+      rows: 3,
+    },
+    {
+      key: 'icon',
+      label: 'Icône',
+      type: 'select',
+      required: true,
+      placeholder: 'Choisir une icône',
+      rowGroup: 'icon-color',
+      options: this.availableIcons.map((icon) => ({
+        label: icon.replace('pi-', ''),
+        value: icon,
+      })),
+    },
+    {
+      key: 'couleur',
+      label: 'Couleur',
+      type: 'color',
+      required: true,
+      placeholder: '#1976D2',
+      rowGroup: 'icon-color',
+    },
+  ];
 
   ngOnInit() {
     this.loadCategories();
@@ -249,21 +262,8 @@ export class CategoriesComponent implements OnInit {
     });
   }
 
-  formatDate(date: string | Date | undefined): string {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
-  getIconClass(icon: string): string {
+  getIconClass(icon: string | null | undefined): string {
+    if (!icon) return 'pi pi-tag';
     return icon.startsWith('pi ') ? icon : `pi ${icon}`;
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.form.get(fieldName);
-    return !!field && field.invalid && (field.dirty || field.touched);
   }
 }

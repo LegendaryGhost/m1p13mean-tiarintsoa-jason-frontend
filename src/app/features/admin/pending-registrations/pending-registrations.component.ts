@@ -1,31 +1,27 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TableModule } from 'primeng/table';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models/user.model';
+import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
+import { ListConfig } from '../../../shared/components/generic-list/generic-list.types';
 
 @Component({
   selector: 'app-pending-registrations',
   imports: [
-    CommonModule,
-    TableModule,
     ButtonModule,
     CardModule,
-    TagModule,
     ToastModule,
     ConfirmDialogModule,
-    TooltipModule
+    GenericListComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pending-registrations.component.html',
-  styleUrl: './pending-registrations.component.scss'
+  styleUrl: './pending-registrations.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PendingRegistrationsComponent implements OnInit {
   private userService = inject(UserService);
@@ -34,6 +30,38 @@ export class PendingRegistrationsComponent implements OnInit {
 
   pendingUsers = signal<User[]>([]);
   loading = signal(false);
+
+  listConfig: ListConfig<User> = {
+    emptyMessage: 'Aucune demande en attente',
+    emptyIcon: 'pi-check-circle',
+    columns: [
+      { field: 'nom', header: 'Nom', cellType: 'text' },
+      { field: 'prenom', header: 'Prénom', cellType: 'text' },
+      { field: 'email', header: 'Email', cellType: 'text' },
+      { field: 'createdAt', header: "Date d'inscription", cellType: 'date' },
+      {
+        field: 'statut',
+        header: 'Statut',
+        cellType: 'badge',
+        badgeValue: () => 'En attente',
+        badgeSeverity: () => 'warn',
+      },
+    ],
+    actions: [
+      {
+        icon: 'pi-check',
+        severity: 'success',
+        tooltip: 'Approuver',
+        action: (user) => this.approveBoutique(user),
+      },
+      {
+        icon: 'pi-times',
+        severity: 'danger',
+        tooltip: 'Rejeter',
+        action: (user) => this.rejectBoutique(user),
+      },
+    ],
+  };
 
   ngOnInit() {
     this.loadPendingUsers();
@@ -117,14 +145,4 @@ export class PendingRegistrationsComponent implements OnInit {
     });
   }
 
-  formatDate(date: string | Date | undefined): string {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
 }
