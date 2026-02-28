@@ -588,6 +588,12 @@ export class ShopLayoutComponent {
       tooltip: 'Tableau de bord de votre boutique'
     },
     {
+      icon: 'pi-map-marker',
+      label: 'Mes demandes',
+      route: '/boutique/mes-demandes',
+      tooltip: 'Mes demandes d\'emplacement'
+    },
+    {
       icon: 'pi-box',
       label: 'Produits',
       route: '/boutique/produits',

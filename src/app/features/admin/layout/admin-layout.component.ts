@@ -600,9 +600,9 @@ export class AdminLayoutComponent {
     },
     {
       icon: 'pi-inbox',
-      label: 'Demandes',
-      route: '/back-office/demandes',
-      tooltip: 'Gérer les demandes de boutiques'
+      label: 'Demandes de location',
+      route: '/back-office/demandes-emplacements',
+      tooltip: 'Gérer les demandes de location d\'emplacements'
     },
     {
       icon: 'pi-map-marker',

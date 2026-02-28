@@ -1,51 +1,49 @@
-import { CategorieBase } from './categorie.model';
+import { BoutiqueBase } from './boutique.model';
 import { EmplacementPopulated } from './emplacement.model';
 
-// Base interface with unpopulated references (IDs only)
+/**
+ * DemandeBoutique — slot location request submitted by an authenticated boutique account.
+ * boutiqueId is resolved server-side; only emplacementSouhaiteId is sent by the client.
+ */
+
+// Base interface: all FK references as string IDs
 export interface DemandeBoutiqueBase {
   _id: string;
-  nom: string;
-  description: string;
-  categorieId: string; // Reference to Categorie
-  logo: string | null;
-  emplacementSouhaiteId: string | null; // Reference to Emplacement (optional)
-  contactNom: string;
-  contactPrenom: string;
-  contactEmail: string;
-  contactTelephone: string;
+  boutiqueId: string;             // Reference to Boutique (resolved server-side)
+  emplacementSouhaiteId: string;  // Reference to Emplacement (required)
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Populated interface with full objects
+// Populated interface: FK references replaced by full objects
 export interface DemandeBoutiquePopulated {
   _id: string;
-  nom: string;
-  description: string;
-  categorieId: CategorieBase; // Populated Categorie reference
-  logo: string | null;
-  emplacementSouhaiteId: EmplacementPopulated | null; // Populated Emplacement reference (optional)
-  contactNom: string;
-  contactPrenom: string;
-  contactEmail: string;
-  contactTelephone: string;
+  boutiqueId: BoutiqueBase;
+  emplacementSouhaiteId: EmplacementPopulated;
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Generic type that can be either
+// Generic union type
 export type DemandeBoutique = DemandeBoutiqueBase | DemandeBoutiquePopulated;
 
-// Type guard for checking if demande is populated
+// Type guard: checks if the demande has populated references
 export function isDemandeBoutiquePopulated(demande: DemandeBoutique): demande is DemandeBoutiquePopulated {
-  return typeof demande.categorieId !== 'string';
+  return typeof demande.boutiqueId !== 'string';
 }
 
-// Type guard for checking if emplacement is populated
-export function hasPopulatedEmplacement(demande: DemandeBoutique): demande is DemandeBoutiquePopulated & { emplacementSouhaiteId: EmplacementPopulated } {
-  return demande.emplacementSouhaiteId != null && typeof demande.emplacementSouhaiteId !== 'string';
+// Type guard: checks if emplacement is populated
+export function hasPopulatedEmplacement(
+  demande: DemandeBoutique
+): demande is DemandeBoutiquePopulated {
+  return isDemandeBoutiquePopulated(demande) && typeof demande.emplacementSouhaiteId !== 'string';
+}
+
+/** Payload sent by the shop client when creating a request */
+export interface CreateDemandePayload {
+  emplacementSouhaiteId: string;
 }
