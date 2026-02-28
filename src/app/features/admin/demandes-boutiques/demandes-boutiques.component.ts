@@ -71,6 +71,8 @@ export class DemandesBoutiquesComponent implements OnInit {
       { field: 'boutiqueId.nom', header: 'Boutique', cellType: 'text', sortable: true },
       { field: 'emplacementSouhaiteId.numero', header: 'Emplacement', cellType: 'text' },
       { field: 'emplacementSouhaiteId.etageId.nom', header: 'Étage', cellType: 'text' },
+      { field: 'dateDebutSouhaitee', header: 'Début souhaité', cellType: 'date', sortable: true },
+      { field: 'dateFinSouhaitee', header: 'Fin souhaitée', cellType: 'date' },
       {
         field: 'statut',
         header: 'Statut',
@@ -242,6 +244,15 @@ export class DemandesBoutiquesComponent implements OnInit {
     if (!d) return '';
     const boutique = (d.boutiqueId as any)?.nom ?? 'cette boutique';
     const emplacement = (d.emplacementSouhaiteId as any)?.numero ?? 'cet emplacement';
-    return `Voulez-vous accepter la demande de <strong>${boutique}</strong> pour l'emplacement <strong>${emplacement}</strong> ?<br><br>L'emplacement sera automatiquement assigné à la boutique.`;
+    const debut = d.dateDebutSouhaitee
+      ? new Date(d.dateDebutSouhaitee).toLocaleDateString('fr-FR')
+      : null;
+    const fin = d.dateFinSouhaitee
+      ? new Date(d.dateFinSouhaitee).toLocaleDateString('fr-FR')
+      : null;
+    const periode = debut
+      ? `<br>Période souhaitée : <strong>${debut}</strong>${fin ? ' → ' + fin : ' (indéterminée)'}`
+      : '';
+    return `Voulez-vous accepter la demande de <strong>${boutique}</strong> pour l'emplacement <strong>${emplacement}</strong> ?${periode}<br><br>L'emplacement sera automatiquement assigné à la boutique.`;
   }
 }

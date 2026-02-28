@@ -23,8 +23,6 @@
           <p-button
             label="Demander un emplacement"
             icon="pi pi-plus"
-            [disabled]="hasPendingRequest()"
-            [pTooltip]="hasPendingRequest() ? 'Une demande est déjà en cours de traitement' : ''"
             (onClick)="openCreateDialog()"
           />
         </div>
@@ -40,7 +38,6 @@
         emptyAction
         label="Demander un emplacement"
         icon="pi pi-plus"
-        [disabled]="hasPendingRequest()"
         (onClick)="openCreateDialog()"
       />
     </app-generic-list>

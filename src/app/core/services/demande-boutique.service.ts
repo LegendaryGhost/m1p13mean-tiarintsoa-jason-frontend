@@ -25,7 +25,7 @@ export class DemandeBoutiqueService extends CrudService<DemandeBoutiqueBase, Dem
 
   /**
    * Boutique: submit a new slot location request.
-   * boutiqueId is resolved server-side from the JWT.
+   * boutiqueId must belong to the authenticated user (validated server-side).
    */
   createDemande(payload: CreateDemandePayload): Observable<DemandeBoutiquePopulated> {
     return this.apiService

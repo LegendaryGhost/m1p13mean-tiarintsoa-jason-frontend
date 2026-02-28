@@ -9,8 +9,10 @@ import { EmplacementPopulated } from './emplacement.model';
 // Base interface: all FK references as string IDs
 export interface DemandeBoutiqueBase {
   _id: string;
-  boutiqueId: string;             // Reference to Boutique (resolved server-side)
+  boutiqueId: string;             // Reference to Boutique (provided by the client)
   emplacementSouhaiteId: string;  // Reference to Emplacement (required)
+  dateDebutSouhaitee: Date;       // Desired rental start date
+  dateFinSouhaitee: Date | null;  // Desired rental end date (optional)
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
   createdAt: Date;
@@ -22,6 +24,8 @@ export interface DemandeBoutiquePopulated {
   _id: string;
   boutiqueId: BoutiqueBase;
   emplacementSouhaiteId: EmplacementPopulated;
+  dateDebutSouhaitee: Date;
+  dateFinSouhaitee: Date | null;
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
   createdAt: Date;
@@ -45,5 +49,8 @@ export function hasPopulatedEmplacement(
 
 /** Payload sent by the shop client when creating a request */
 export interface CreateDemandePayload {
+  boutiqueId: string;            // Which of the user's boutiques is requesting the slot
   emplacementSouhaiteId: string;
+  dateDebutSouhaitee: string;    // ISO 8601 date string
+  dateFinSouhaitee?: string;     // ISO 8601 date string (optional)
 }
