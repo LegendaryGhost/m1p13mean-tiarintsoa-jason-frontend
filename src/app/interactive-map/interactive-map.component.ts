@@ -12,10 +12,12 @@ import {
   PLATFORM_ID
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
 import { BoutiqueService } from '../core/services/boutique.service';
+import { VisitTrackingService } from '../core/services/visit-tracking.service';
 import { Etage, Emplacement, Boutique, BoutiquePopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
@@ -175,6 +177,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   private etageService = inject(EtageService);
   private emplacementService = inject(EmplacementService);
   private boutiqueService = inject(BoutiqueService);
+  private visitTrackingService = inject(VisitTrackingService);
+  private router = inject(Router);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   // Signals
@@ -220,12 +224,24 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     if (this.isBrowser) {
+      this.trackMapVisitIfHomeRoute();
       this.initializeCanvas();
     }
   }
 
   ngOnDestroy(): void {
     // Cleanup
+  }
+
+  private trackMapVisitIfHomeRoute(): void {
+    if (this.router.url !== '/') {
+      return;
+    }
+
+    this.visitTrackingService.trackMapHomeVisit().subscribe({
+      error: () => {
+      },
+    });
   }
 
   /**
