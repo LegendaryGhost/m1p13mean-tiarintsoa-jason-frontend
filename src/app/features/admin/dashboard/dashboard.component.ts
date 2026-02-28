@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
+import { DashboardService } from '../../../core/services/dashboard.service';
 
 interface VisitorDataPoint {
   day: string;
@@ -25,7 +26,6 @@ interface ShopVisitStat {
             <p>Vue d’ensemble des emplacements et de la fréquentation</p>
           </div>
         </div>
-        <p-tag value="Données mockées" severity="warn" />
       </div>
 
       <section class="stats-grid" aria-label="Statistiques des emplacements">
@@ -79,7 +79,7 @@ interface ShopVisitStat {
         <p-card>
           <div class="section-header">
             <h2>Nombre de visiteurs</h2>
-            <p>Évolution sur 7 jours</p>
+            <p>Évolution sur {{ periodDays() }} jours</p>
           </div>
 
           <div class="line-chart" role="img" aria-label="Courbe de fréquentation des visiteurs sur 7 jours">
@@ -434,25 +434,55 @@ interface ShopVisitStat {
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class DashboardComponent {
-  readonly freeSlots = signal(42);
-  readonly occupiedSlots = signal(118);
+export class DashboardComponent implements OnInit {
+  private dashboardService = inject(DashboardService);
 
-  readonly visitorSeries = signal<VisitorDataPoint[]>([
-    { day: 'Lun', value: 1120 },
-    { day: 'Mar', value: 1280 },
-    { day: 'Mer', value: 1210 },
-    { day: 'Jeu', value: 1490 },
-    { day: 'Ven', value: 1730 },
-    { day: 'Sam', value: 2310 },
-    { day: 'Dim', value: 1980 },
-  ]);
+  readonly freeSlots = signal(0);
+  readonly occupiedSlots = signal(0);
+  readonly periodDays = signal(7);
+
+  readonly visitorSeries = signal<VisitorDataPoint[]>([]);
 
   readonly topShops = signal<ShopVisitStat[]>([
     { name: 'Boutique Élégance', visits: 1840 },
     { name: 'Tech Horizon', visits: 1625 },
     { name: 'Maison Gourmande', visits: 1498 },
   ]);
+
+  ngOnInit(): void {
+    this.loadDashboardStats();
+  }
+
+  private loadDashboardStats(): void {
+    this.dashboardService.getAdminStats(this.periodDays()).subscribe({
+      next: (stats) => {
+        this.freeSlots.set(stats.slots.free);
+        this.occupiedSlots.set(stats.slots.occupied);
+
+        this.visitorSeries.set(
+          stats.visitors.series.map((item) => ({
+            day: this.formatDay(item.date),
+            value: item.count,
+          }))
+        );
+      },
+      error: () => {
+        this.visitorSeries.set([]);
+        this.freeSlots.set(0);
+        this.occupiedSlots.set(0);
+      },
+    });
+  }
+
+  private formatDay(dateIso: string): string {
+    const date = new Date(dateIso);
+    if (Number.isNaN(date.getTime())) {
+      return dateIso;
+    }
+
+    const dayLabel = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(date);
+    return dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1, 3);
+  }
 
   readonly totalSlots = computed(() => this.freeSlots() + this.occupiedSlots());
 
