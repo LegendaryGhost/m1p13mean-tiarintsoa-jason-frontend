@@ -17,6 +17,13 @@ export class EmplacementService extends CrudService<EmplacementBase, Emplacement
     );
   }
 
+  // Returns only libre emplacements (for slot selection dropdowns)
+  getDisponibles(): Observable<EmplacementPopulated[]> {
+    return this.apiService
+      .get<ApiResponse<EmplacementPopulated[]>>('emplacements/disponibles')
+      .pipe(map((response) => response.data));
+  }
+
   // Alias method for backward compatibility
   getAllEmplacements() {
     return this.getAll();

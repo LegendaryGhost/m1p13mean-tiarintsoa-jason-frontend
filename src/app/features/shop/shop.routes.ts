@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { Component } from '@angular/core';
+import { MesDemandesComponent } from './mes-demandes/mes-demandes.component';
 
 @Component({
   standalone: true,
@@ -8,6 +9,7 @@ import { Component } from '@angular/core';
 class ShopHomeComponent {}
 
 export const SHOP_ROUTES: Routes = [
-  { path: '', component: ShopHomeComponent }
+  { path: '', component: ShopHomeComponent },
+  { path: 'mes-demandes', component: MesDemandesComponent }
 ];
 export default SHOP_ROUTES;
