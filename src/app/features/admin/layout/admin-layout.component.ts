@@ -133,6 +133,20 @@ interface SidebarItem {
         <main class="main-content">
           <router-outlet></router-outlet>
         </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+          <div class="footer-content">
+            <i class="pi pi-heart footer-heart"></i>
+            <span>Conçu et développé par</span>
+            <span class="footer-authors">
+              <span class="footer-author">RALIJAONA Andriniaina Jason</span>
+              <span class="footer-separator">&amp;</span>
+              <span class="footer-author">MBOLATSIORY Rihantiana Tiarintsoa</span>
+            </span>
+            <span class="footer-year">&copy; {{ currentYear }}</span>
+          </div>
+        </footer>
       </div>
     </div>
 
@@ -392,6 +406,74 @@ interface SidebarItem {
       overflow: auto;
     }
 
+    /* Footer */
+    .main-footer {
+      flex-shrink: 0;
+      background: var(--color-background-primary);
+      border-top: 1px solid var(--color-border);
+      padding: 0.875rem 2rem;
+      box-shadow: 0 -2px 8px color-mix(in srgb, var(--color-warning) 6%, transparent);
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.8125rem;
+      color: var(--color-text-secondary);
+    }
+
+    .footer-heart {
+      color: var(--color-warning);
+      font-size: 0.875rem;
+      animation: heartbeat 1.8s ease-in-out infinite;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      14% { transform: scale(1.25); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.15); }
+      56% { transform: scale(1); }
+    }
+
+    .footer-authors {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-author {
+      font-weight: 600;
+      color: var(--color-warning);
+      letter-spacing: 0.2px;
+    }
+
+    .footer-separator {
+      color: var(--color-text-secondary);
+      font-weight: 400;
+    }
+
+    .footer-year {
+      color: var(--color-text-secondary);
+      opacity: 0.7;
+    }
+
+    @media (max-width: 768px) {
+      .main-footer {
+        padding: 0.75rem 1rem;
+      }
+
+      .footer-content {
+        font-size: 0.75rem;
+        gap: 0.375rem;
+      }
+    }
+
     .hamburger-button {
       display: none;
       background: transparent;
@@ -480,6 +562,9 @@ export class AdminLayoutComponent {
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+
+  // Footer
+  currentYear = new Date().getFullYear();
 
   // Sidebar state
   isSidebarCollapsed = signal<boolean>(this.isBrowser && window.innerWidth <= 768);
