@@ -1,5 +1,6 @@
 import {
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   OnInit,
   computed,
@@ -10,15 +11,15 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 
 import { CategorieBase } from '../../../core/models';
 import { CategorieService } from '../../../core/services/categorie.service';
 import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
 import { GenericFormDialogComponent } from '../../../shared/components/generic-form-dialog/generic-form-dialog.component';
+import { GenericConfirmDialogComponent } from '../../../shared/components/generic-confirm-dialog/generic-confirm-dialog.component';
 import { ListConfig } from '../../../shared/components/generic-list/generic-list.types';
 import { FieldDef } from '../../../shared/components/generic-form-dialog/generic-form-dialog.types';
 
@@ -28,13 +29,13 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
     ReactiveFormsModule,
     ButtonModule,
     CardModule,
-    ConfirmDialogModule,
     TagModule,
     ToastModule,
     GenericListComponent,
     GenericFormDialogComponent,
+    GenericConfirmDialogComponent,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +43,7 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
 export class CategoriesComponent implements OnInit {
   private categorieService = inject(CategorieService);
   private messageService = inject(MessageService);
-  private confirmationService = inject(ConfirmationService);
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
 
   categories = signal<CategorieBase[]>([]);
@@ -50,6 +51,10 @@ export class CategoriesComponent implements OnInit {
   dialogVisible = signal(false);
   saving = signal(false);
   editingId = signal<string | null>(null);
+
+  deleteDialogVisible = signal(false);
+  deletingCategorie = signal<CategorieBase | null>(null);
+  deleting = signal(false);
 
   isEditing = computed(() => this.editingId() !== null);
 
@@ -233,31 +238,39 @@ export class CategoriesComponent implements OnInit {
   }
 
   confirmDelete(categorie: CategorieBase) {
-    this.confirmationService.confirm({
-      message: `Voulez-vous vraiment supprimer la catégorie <strong>${categorie.nom}</strong> ? Cette action est irréversible.`,
-      header: 'Confirmer la suppression',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Supprimer',
-      rejectLabel: 'Annuler',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        this.categorieService.delete(categorie._id).subscribe({
-          next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Supprimé',
-              detail: `La catégorie "${categorie.nom}" a été supprimée`,
-            });
-            this.loadCategories();
-          },
-          error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: 'Impossible de supprimer cette catégorie',
-            });
-          },
+    this.deletingCategorie.set(categorie);
+    this.deleteDialogVisible.set(true);
+    this.cdr.detectChanges();
+  }
+
+  cancelDelete() {
+    this.deleteDialogVisible.set(false);
+    this.deletingCategorie.set(null);
+  }
+
+  executeDelete() {
+    const categorie = this.deletingCategorie();
+    if (!categorie) return;
+
+    this.deleting.set(true);
+    this.categorieService.delete(categorie._id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Supprimé',
+          detail: `La catégorie "${categorie.nom}" a été supprimée`,
         });
+        this.deleting.set(false);
+        this.cancelDelete();
+        this.loadCategories();
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de supprimer cette catégorie',
+        });
+        this.deleting.set(false);
       },
     });
   }

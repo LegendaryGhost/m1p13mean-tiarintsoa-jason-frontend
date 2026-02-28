@@ -1,0 +1,24 @@
+.confirm-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.25rem 0 0.5rem;
+
+  .confirm-icon {
+    font-size: 1.5rem;
+    color: var(--color-warning);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .confirm-message {
+    line-height: 1.5;
+    color: var(--color-text-primary);
+  }
+}
+
+.confirm-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

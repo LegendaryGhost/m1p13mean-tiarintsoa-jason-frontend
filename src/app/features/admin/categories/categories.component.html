@@ -1,6 +1,5 @@
 <div class="categories-container">
   <p-toast />
-  <p-confirmDialog />
 
   <p-card>
     <ng-template pTemplate="header">
@@ -67,4 +66,17 @@
     />
   </div>
 </app-generic-form-dialog>
+
+<app-generic-confirm-dialog
+  [visible]="deleteDialogVisible()"
+  header="Confirmer la suppression"
+  [message]="'Voulez-vous vraiment supprimer la catégorie <strong>' + (deletingCategorie()?.nom ?? '') + '</strong> ? Cette action est irréversible.'"
+  confirmLabel="Supprimer"
+  confirmIcon="pi-trash"
+  severity="danger"
+  [loading]="deleting()"
+  (visibleChange)="$event ? null : cancelDelete()"
+  (confirm)="executeDelete()"
+  (cancel)="cancelDelete()"
+/>
 

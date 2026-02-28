@@ -1,0 +1,35 @@
+<p-dialog
+  [header]="header()"
+  [visible]="visible()"
+  (visibleChange)="$event ? null : onHide()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="generic-confirm-dialog"
+  [style]="{ width: '450px' }"
+>
+  <div class="confirm-body">
+    <i [class]="icon()" class="confirm-icon" aria-hidden="true"></i>
+    <span class="confirm-message" [innerHTML]="message()"></span>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="confirm-footer">
+      <p-button
+        [label]="cancelLabel()"
+        icon="pi pi-times"
+        [outlined]="true"
+        severity="secondary"
+        (onClick)="onCancel()"
+      />
+      <p-button
+        [label]="confirmLabel()"
+        [icon]="'pi ' + confirmIcon()"
+        [severity]="severity()"
+        [loading]="loading()"
+        (onClick)="onConfirm()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
