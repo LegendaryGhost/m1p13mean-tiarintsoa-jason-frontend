@@ -1,0 +1,116 @@
+@if (loading()) {
+  <div class="loading-container" role="status" aria-live="polite">
+    <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+    <p>Chargement...</p>
+  </div>
+} @else if (data().length === 0) {
+  <div class="empty-state">
+    <i [class]="'pi ' + (config().emptyIcon ?? 'pi-inbox') + ' empty-icon'" aria-hidden="true"></i>
+    <h2>{{ config().emptyMessage ?? 'Aucun élément' }}</h2>
+    <ng-content select="[emptyAction]" />
+  </div>
+} @else {
+  <p-table
+    [value]="data()"
+    [tableStyle]="{ 'min-width': '40rem' }"
+    styleClass="p-datatable-striped"
+    [paginator]="(config().paginator ?? false) && data().length > (config().rows ?? 10)"
+    [rows]="config().rows ?? 10"
+    [rowsPerPageOptions]="config().rowsPerPageOptions ?? [10, 25, 50]"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        @for (col of config().columns; track col.field) {
+          @if (col.sortable) {
+            <th [style.width]="col.width ?? ''" pSortableColumn="{{ col.field }}">
+              {{ col.header }} <p-sortIcon [field]="col.field" />
+            </th>
+          } @else {
+            <th [style.width]="col.width ?? ''">{{ col.header }}</th>
+          }
+        }
+        @if (hasActions()) {
+          <th class="col-actions">Actions</th>
+        }
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        @for (col of config().columns; track col.field) {
+          <td>
+            @switch (col.cellType ?? 'text') {
+              @case ('badge') {
+                <p-tag
+                  [value]="getBadgeValue(col, row)"
+                  [severity]="getBadgeSeverity(col, row)"
+                />
+              }
+
+              @case ('color') {
+                <div class="color-preview-group">
+                  <span
+                    class="color-swatch"
+                    [style.background-color]="getHexFromRow(row, col)"
+                    [attr.aria-label]="'Couleur: ' + getHexFromRow(row, col)"
+                  ></span>
+                  <code class="color-code">{{ getHexFromRow(row, col) }}</code>
+                </div>
+              }
+
+              @case ('icon') {
+                <span
+                  class="category-icon-badge"
+                  [style.background-color]="getColorFromRow(row, col) + '22'"
+                  [style.color]="getColorFromRow(row, col)"
+                  [style.border-color]="getColorFromRow(row, col) + '55'"
+                >
+                  <i [class]="getIconFromRow(row, col)" aria-hidden="true"></i>
+                </span>
+              }
+
+              @case ('date') {
+                {{ formatDate(getCellValue(row, col)) }}
+              }
+
+              @case ('custom') {
+                @if (col.template) {
+                  <ng-container *ngTemplateOutlet="col.template; context: { $implicit: row }" />
+                }
+              }
+
+              @default {
+                {{ getCellValue(row, col) ?? '—' }}
+              }
+            }
+          </td>
+        }
+
+        @if (hasActions()) {
+          <td>
+            <div class="action-buttons">
+              @if (actionsTemplate) {
+                <ng-container *ngTemplateOutlet="actionsTemplate; context: { $implicit: row }" />
+              } @else {
+                @for (action of config().actions; track action.icon) {
+                  @if (isActionVisible(action, row)) {
+                    <p-button
+                      [icon]="'pi ' + action.icon"
+                      [rounded]="true"
+                      [outlined]="true"
+                      [severity]="action.severity ?? undefined"
+                      [pTooltip]="action.tooltip"
+                      tooltipPosition="top"
+                      (onClick)="action.action(row)"
+                      [attr.aria-label]="action.tooltip"
+                    />
+                  }
+                }
+              }
+            </div>
+          </td>
+        }
+      </tr>
+    </ng-template>
+  </p-table>
+}

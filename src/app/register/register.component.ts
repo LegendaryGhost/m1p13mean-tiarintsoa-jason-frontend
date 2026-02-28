@@ -7,6 +7,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { FormsModule } from '@angular/forms';
+import { ThemeToggleComponent } from '../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-register',
@@ -17,11 +18,13 @@ import { FormsModule } from '@angular/forms';
     ButtonModule,
     MessageModule,
     FormsModule,
-    RouterModule
+    RouterModule,
+    ThemeToggleComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="register-wrapper">
+      <app-theme-toggle [standalone]="true" />
       <p-card header="Inscription Boutique">
         <p class="subtitle">Créez votre compte boutique. Votre demande sera examinée par un administrateur.</p>
 
@@ -115,21 +118,22 @@ import { FormsModule } from '@angular/forms';
   `,
   styles: [`
     .register-wrapper {
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 20px;
-      background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--primary-light) 100%);
+      background: linear-gradient(135deg, var(--color-background-secondary) 0%, var(--color-primary-light) 100%);
     }
 
     :host ::ng-deep .p-card {
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 8px 24px rgba(25, 118, 210, 0.12);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary) 12%, transparent);
       border-radius: 12px;
-      border: 1px solid var(--border-color);
-      background: var(--bg-primary);
+      border: 1px solid var(--color-border);
+      background: var(--color-background-primary);
     }
 
     :host ::ng-deep .p-card-header {
@@ -137,8 +141,8 @@ import { FormsModule } from '@angular/forms';
       font-size: 2rem;
       font-weight: 700;
       line-height: 1.2;
-      color: var(--primary-color);
-      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+      color: var(--color-primary);
+      background: linear-gradient(to right, var(--color-primary), var(--color-accent));
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -146,13 +150,13 @@ import { FormsModule } from '@angular/forms';
 
     .subtitle {
       text-align: center;
-      color: var(--text-secondary);
+      color: var(--color-text-secondary);
       font-size: 0.875rem;
       margin-bottom: 1.5rem;
       padding: 0.75rem;
-      background: var(--bg-secondary);
+      background: var(--color-background-secondary);
       border-radius: 6px;
-      border-left: 3px solid var(--warning-color);
+      border-left: 3px solid var(--color-warning);
     }
 
     .form-group {
@@ -175,7 +179,7 @@ import { FormsModule } from '@angular/forms';
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      color: var(--text-primary);
+      color: var(--color-text-primary);
     }
 
     .w-full {
@@ -183,13 +187,13 @@ import { FormsModule } from '@angular/forms';
     }
 
     :host ::ng-deep .p-inputtext {
-      border-color: var(--border-color);
-      color: var(--text-primary);
+      border-color: var(--color-border);
+      color: var(--color-text-primary);
     }
 
     :host ::ng-deep .p-inputtext:enabled:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, transparent);
     }
 
     :host ::ng-deep .p-password {
@@ -198,48 +202,27 @@ import { FormsModule } from '@angular/forms';
 
     :host ::ng-deep .p-password input {
       width: 100%;
-      border-color: var(--border-color);
-      color: var(--text-primary);
+      border-color: var(--color-border);
+      color: var(--color-text-primary);
     }
 
     :host ::ng-deep .p-password input:enabled:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
-    }
-
-    .select-field {
-      padding: 0.75rem;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 1rem;
-      color: var(--text-primary);
-      background-color: var(--bg-primary);
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      cursor: pointer;
-    }
-
-    .select-field:focus {
-      outline: none;
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
-    }
-
-    .select-field:hover {
-      border-color: var(--primary-color);
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--color-primary) 25%, transparent);
     }
 
     :host ::ng-deep .p-button {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
+      background: var(--color-primary);
+      border-color: var(--color-primary);
       transition: all 0.3s ease;
       margin-top: 0.5rem;
     }
 
     :host ::ng-deep .p-button:enabled:hover {
-      background: var(--primary-dark);
-      border-color: var(--primary-dark);
+      background: var(--color-primary-dark);
+      border-color: var(--color-primary-dark);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 30%, transparent);
     }
 
     :host ::ng-deep .p-button:enabled:active {
@@ -247,8 +230,8 @@ import { FormsModule } from '@angular/forms';
     }
 
     :host ::ng-deep .p-button:disabled {
-      background: var(--text-disabled);
-      border-color: var(--text-disabled);
+      background: var(--color-text-disabled);
+      border-color: var(--color-text-disabled);
     }
 
     :host ::ng-deep .p-message.p-message-error {
@@ -273,12 +256,12 @@ import { FormsModule } from '@angular/forms';
     }
 
     .login-link p, .map-link p {
-      color: var(--text-secondary);
+      color: var(--color-text-secondary);
       font-size: 0.875rem;
     }
 
     .login-link a, .map-link a {
-      color: var(--accent-color);
+      color: var(--color-accent);
       text-decoration: none;
       cursor: pointer;
       font-weight: 500;
@@ -286,7 +269,7 @@ import { FormsModule } from '@angular/forms';
     }
 
     .login-link a:hover, .map-link a:hover {
-      color: var(--accent-dark);
+      color: var(--color-accent-dark);
       text-decoration: underline;
     }
   `]
