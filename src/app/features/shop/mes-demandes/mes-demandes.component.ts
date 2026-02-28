@@ -13,10 +13,10 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { DemandeBoutiquePopulated } from '../../../core/models/demande-boutique.model';
-import { BoutiquePopulated } from '../../../core/models/boutique.model';
+import { CategorieBase } from '../../../core/models/categorie.model';
 import { EmplacementPopulated } from '../../../core/models/emplacement.model';
 import { DemandeBoutiqueService } from '../../../core/services/demande-boutique.service';
-import { BoutiqueService } from '../../../core/services/boutique.service';
+import { CategorieService } from '../../../core/services/categorie.service';
 import { EmplacementService } from '../../../core/services/emplacement.service';
 import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
 import { GenericFormDialogComponent } from '../../../shared/components/generic-form-dialog/generic-form-dialog.component';
@@ -40,23 +40,27 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
 })
 export class MesDemandesComponent implements OnInit {
   private demandeService = inject(DemandeBoutiqueService);
-  private boutiqueService = inject(BoutiqueService);
+  private categorieService = inject(CategorieService);
   private emplacementService = inject(EmplacementService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
 
   demandes = signal<DemandeBoutiquePopulated[]>([]);
-  mesBoutiques = signal<BoutiquePopulated[]>([]);
+  categories = signal<CategorieBase[]>([]);
   emplacementsLibres = signal<EmplacementPopulated[]>([]);
   loading = signal(false);
   dialogVisible = signal(false);
   saving = signal(false);
 
   form: FormGroup = this.fb.group({
-    boutiqueId: ['', [Validators.required]],
+    nomBoutique: ['', [Validators.required]],
+    categorieId: ['', [Validators.required]],
+    heureOuverture: ['', [Validators.required, Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
+    heureFermeture: ['', [Validators.required, Validators.pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)]],
     emplacementSouhaiteId: ['', [Validators.required]],
     dateDebutSouhaitee: ['', [Validators.required]],
     dateFinSouhaitee: [''],
+    description: [''],
   });
 
   // ── Form fields — set once when the dialog opens to avoid p-select resetting
@@ -71,7 +75,8 @@ export class MesDemandesComponent implements OnInit {
     emptyMessage: 'Aucune demande soumise',
     emptyIcon: 'pi-inbox',
     columns: [
-      { field: 'boutiqueId.nom', header: 'Boutique', cellType: 'text', sortable: true },
+      { field: 'nomBoutique', header: 'Boutique demandée', cellType: 'text', sortable: true },
+      { field: 'categorieId.nom', header: 'Catégorie', cellType: 'text' },
       { field: 'emplacementSouhaiteId.numero', header: 'Emplacement', cellType: 'text' },
       { field: 'emplacementSouhaiteId.etageId.nom', header: 'Étage', cellType: 'text' },
       { field: 'dateDebutSouhaitee', header: 'Début souhaité', cellType: 'date', sortable: true },
@@ -105,7 +110,7 @@ export class MesDemandesComponent implements OnInit {
   ngOnInit() {
     this.loadDemandes();
     this.loadEmplacementsLibres();
-    this.loadMesBoutiques();
+    this.loadCategories();
   }
 
   loadDemandes() {
@@ -126,17 +131,14 @@ export class MesDemandesComponent implements OnInit {
     });
   }
 
-  loadMesBoutiques() {
-    this.boutiqueService.getMesBoutiques().subscribe({
-      next: (boutiques) => {
-        // Only show validated shops for slot requests
-        this.mesBoutiques.set(boutiques.filter((b) => b.statut === 'validee'));
-      },
+  loadCategories() {
+    this.categorieService.getAll().subscribe({
+      next: (data) => this.categories.set(data),
       error: () => {
         this.messageService.add({
           severity: 'warn',
           summary: 'Avertissement',
-          detail: 'Impossible de charger vos boutiques',
+          detail: 'Impossible de charger les catégories',
         });
       },
     });
@@ -161,15 +163,19 @@ export class MesDemandesComponent implements OnInit {
     // reset its value and trigger spurious validation errors.
     this.formFields.set([
       {
-        key: 'boutiqueId',
-        label: 'Boutique',
+        key: 'nomBoutique',
+        label: 'Nom de la boutique',
+        type: 'text',
+        required: true,
+        placeholder: 'Ex\u00a0: Ma Boutique',
+      },
+      {
+        key: 'categorieId',
+        label: 'Catégorie',
         type: 'select',
         required: true,
-        placeholder: 'Choisir une boutique',
-        options: this.mesBoutiques().map((b) => ({
-          label: b.nom,
-          value: b._id,
-        })),
+        placeholder: 'Choisir une catégorie',
+        options: this.categories().map((c) => ({ label: c.nom, value: c._id })),
       },
       {
         key: 'emplacementSouhaiteId',
@@ -178,9 +184,25 @@ export class MesDemandesComponent implements OnInit {
         required: true,
         placeholder: 'Choisir un emplacement disponible',
         options: this.emplacementsLibres().map((e) => ({
-          label: `${e.numero} — Étage ${(e.etageId as any)?.niveau ?? ''} ${(e.etageId as any)?.nom ? ' (' + (e.etageId as any).nom + ')' : ''}`.trim(),
+          label: `${e.numero} — Étage ${(e.etageId as any)?.niveau ?? ''} ${(e.etageId as any)?.nom ? '(' + (e.etageId as any).nom + ')' : ''}`.trim(),
           value: e._id,
         })),
+      },
+      {
+        key: 'heureOuverture',
+        label: "Heure d'ouverture",
+        type: 'text',
+        required: true,
+        placeholder: 'HH:MM',
+        rowGroup: 'horaires',
+      },
+      {
+        key: 'heureFermeture',
+        label: 'Heure de fermeture',
+        type: 'text',
+        required: true,
+        placeholder: 'HH:MM',
+        rowGroup: 'horaires',
       },
       {
         key: 'dateDebutSouhaitee',
@@ -195,12 +217,23 @@ export class MesDemandesComponent implements OnInit {
         type: 'date',
         rowGroup: 'dates',
       },
+      {
+        key: 'description',
+        label: 'Description',
+        type: 'textarea',
+        rows: 3,
+        placeholder: 'Décrivez votre boutique...',
+      },
     ]);
     this.form.reset({
-      boutiqueId: '',
+      nomBoutique: '',
+      categorieId: '',
+      heureOuverture: '',
+      heureFermeture: '',
       emplacementSouhaiteId: '',
       dateDebutSouhaitee: '',
       dateFinSouhaitee: '',
+      description: '',
     });
     this.dialogVisible.set(true);
   }
@@ -217,16 +250,21 @@ export class MesDemandesComponent implements OnInit {
     }
 
     this.saving.set(true);
-    const { boutiqueId, emplacementSouhaiteId, dateDebutSouhaitee, dateFinSouhaitee } =
-      this.form.value;
-    this.demandeService
-      .createDemande({
-        boutiqueId,
-        emplacementSouhaiteId,
-        dateDebutSouhaitee,
-        ...(dateFinSouhaitee ? { dateFinSouhaitee } : {}),
-      })
-      .subscribe({
+    const {
+      nomBoutique, categorieId, heureOuverture, heureFermeture,
+      emplacementSouhaiteId, dateDebutSouhaitee, dateFinSouhaitee, description,
+    } = this.form.value;
+
+    this.demandeService.createDemande({
+      nomBoutique,
+      categorieId,
+      heureOuverture,
+      heureFermeture,
+      emplacementSouhaiteId,
+      dateDebutSouhaitee,
+      ...(dateFinSouhaitee ? { dateFinSouhaitee } : {}),
+      ...(description ? { description } : {}),
+    }).subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
@@ -239,8 +277,7 @@ export class MesDemandesComponent implements OnInit {
         this.loadEmplacementsLibres();
       },
       error: (err) => {
-        const detail =
-          err?.error?.message ?? 'Impossible de soumettre votre demande';
+        const detail = err?.error?.message ?? 'Impossible de soumettre votre demande';
         this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
         this.saving.set(false);
       },

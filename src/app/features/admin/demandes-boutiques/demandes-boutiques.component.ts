@@ -68,7 +68,8 @@ export class DemandesBoutiquesComponent implements OnInit {
     emptyMessage: 'Aucune demande',
     emptyIcon: 'pi-inbox',
     columns: [
-      { field: 'boutiqueId.nom', header: 'Boutique', cellType: 'text', sortable: true },
+      { field: 'nomBoutique', header: 'Boutique demandée', cellType: 'text', sortable: true },
+      { field: 'categorieId.nom', header: 'Catégorie', cellType: 'text' },
       { field: 'emplacementSouhaiteId.numero', header: 'Emplacement', cellType: 'text' },
       { field: 'emplacementSouhaiteId.etageId.nom', header: 'Étage', cellType: 'text' },
       { field: 'dateDebutSouhaitee', header: 'Début souhaité', cellType: 'date', sortable: true },
@@ -169,7 +170,7 @@ export class DemandesBoutiquesComponent implements OnInit {
     this.accepting.set(true);
     this.demandeService.updateStatut(demande._id, 'acceptee').subscribe({
       next: () => {
-        const boutiqueName = (demande.boutiqueId as any)?.nom ?? 'la boutique';
+        const boutiqueName = demande.nomBoutique;
         this.messageService.add({
           severity: 'success',
           summary: 'Demande acceptée',
@@ -218,7 +219,7 @@ export class DemandesBoutiquesComponent implements OnInit {
 
     this.demandeService.updateStatut(demande._id, 'refusee', motifRefus).subscribe({
       next: () => {
-        const boutiqueName = (demande.boutiqueId as any)?.nom ?? 'la boutique';
+        const boutiqueName = demande.nomBoutique;
         this.messageService.add({
           severity: 'info',
           summary: 'Demande refusée',
@@ -242,7 +243,7 @@ export class DemandesBoutiquesComponent implements OnInit {
   get acceptMessage(): string {
     const d = this.acceptingDemande();
     if (!d) return '';
-    const boutique = (d.boutiqueId as any)?.nom ?? 'cette boutique';
+    const boutique = d.nomBoutique;
     const emplacement = (d.emplacementSouhaiteId as any)?.numero ?? 'cet emplacement';
     const debut = d.dateDebutSouhaitee
       ? new Date(d.dateDebutSouhaitee).toLocaleDateString('fr-FR')
@@ -251,8 +252,8 @@ export class DemandesBoutiquesComponent implements OnInit {
       ? new Date(d.dateFinSouhaitee).toLocaleDateString('fr-FR')
       : null;
     const periode = debut
-      ? `<br>Période souhaitée : <strong>${debut}</strong>${fin ? ' → ' + fin : ' (indéterminée)'}`
+      ? `<br>Période souhaitée\u00a0: <strong>${debut}</strong>${fin ? ' → ' + fin : ' (indéterminée)'}`
       : '';
-    return `Voulez-vous accepter la demande de <strong>${boutique}</strong> pour l'emplacement <strong>${emplacement}</strong> ?${periode}<br><br>L'emplacement sera automatiquement assigné à la boutique.`;
+    return `Accepter la demande de <strong>${boutique}</strong> pour l'emplacement <strong>${emplacement}</strong> ?${periode}<br><br>La boutique et l'assignation d'emplacement seront créées automatiquement.`;
   }
 }

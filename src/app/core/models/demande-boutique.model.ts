@@ -1,20 +1,32 @@
+import { UserBase } from './user.model';
 import { BoutiqueBase } from './boutique.model';
+import { CategorieBase } from './categorie.model';
 import { EmplacementPopulated } from './emplacement.model';
 
 /**
- * DemandeBoutique — slot location request submitted by an authenticated boutique account.
- * boutiqueId is resolved server-side; only emplacementSouhaiteId is sent by the client.
+ * DemandeBoutique — slot location request with all shop info embedded.
+ * A Boutique document is only created when the admin accepts the request.
  */
 
 // Base interface: all FK references as string IDs
 export interface DemandeBoutiqueBase {
   _id: string;
-  boutiqueId: string;             // Reference to Boutique (provided by the client)
-  emplacementSouhaiteId: string;  // Reference to Emplacement (required)
-  dateDebutSouhaitee: Date;       // Desired rental start date
-  dateFinSouhaitee: Date | null;  // Desired rental end date (optional)
+  userId: string;
+  // Embedded shop info
+  nomBoutique: string;
+  description: string;
+  categorieId: string;
+  heureOuverture: string;
+  heureFermeture: string;
+  joursOuverture: string[];
+  // Requested slot
+  emplacementSouhaiteId: string;
+  dateDebutSouhaitee: Date;
+  dateFinSouhaitee: Date | null;
+  // Decision
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
+  boutiqueId: string | null; // null until accepted
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,12 +34,22 @@ export interface DemandeBoutiqueBase {
 // Populated interface: FK references replaced by full objects
 export interface DemandeBoutiquePopulated {
   _id: string;
-  boutiqueId: BoutiqueBase;
+  userId: UserBase;
+  // Embedded shop info (categorieId populated in reads)
+  nomBoutique: string;
+  description: string;
+  categorieId: CategorieBase;
+  heureOuverture: string;
+  heureFermeture: string;
+  joursOuverture: string[];
+  // Requested slot
   emplacementSouhaiteId: EmplacementPopulated;
   dateDebutSouhaitee: Date;
   dateFinSouhaitee: Date | null;
+  // Decision
   statut: 'en_attente' | 'acceptee' | 'refusee';
   motifRefus: string | null;
+  boutiqueId: BoutiqueBase | null; // null until accepted
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,7 +59,7 @@ export type DemandeBoutique = DemandeBoutiqueBase | DemandeBoutiquePopulated;
 
 // Type guard: checks if the demande has populated references
 export function isDemandeBoutiquePopulated(demande: DemandeBoutique): demande is DemandeBoutiquePopulated {
-  return typeof demande.boutiqueId !== 'string';
+  return typeof demande.categorieId !== 'string';
 }
 
 // Type guard: checks if emplacement is populated
@@ -49,8 +71,13 @@ export function hasPopulatedEmplacement(
 
 /** Payload sent by the shop client when creating a request */
 export interface CreateDemandePayload {
-  boutiqueId: string;            // Which of the user's boutiques is requesting the slot
+  nomBoutique: string;
+  description?: string;
+  categorieId: string;
+  heureOuverture: string;
+  heureFermeture: string;
+  joursOuverture?: string[];
   emplacementSouhaiteId: string;
-  dateDebutSouhaitee: string;    // ISO 8601 date string
-  dateFinSouhaitee?: string;     // ISO 8601 date string (optional)
+  dateDebutSouhaitee: string;    // ISO 8601
+  dateFinSouhaitee?: string;     // ISO 8601 (optional)
 }
