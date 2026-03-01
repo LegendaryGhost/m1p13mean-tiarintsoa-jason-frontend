@@ -9,9 +9,8 @@ import {
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { PageListLayoutComponent } from '../../../shared/components/page-list-layout/page-list-layout.component';
 
 import { DemandeBoutiquePopulated } from '../../../core/models/demande-boutique.model';
 import { DemandeBoutiqueService } from '../../../core/services/demande-boutique.service';
@@ -26,9 +25,8 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
   imports: [
     ReactiveFormsModule,
     ButtonModule,
-    CardModule,
-    ToastModule,
     GenericListComponent,
+    PageListLayoutComponent,
     GenericFormDialogComponent,
     GenericConfirmDialogComponent,
   ],

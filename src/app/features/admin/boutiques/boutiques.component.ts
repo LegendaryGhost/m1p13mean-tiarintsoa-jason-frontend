@@ -1,16 +1,14 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { BoutiqueService } from '../../../core/services/boutique.service';
 import { BoutiquePopulated } from '../../../core/models/boutique.model';
 import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
+import { PageListLayoutComponent } from '../../../shared/components/page-list-layout/page-list-layout.component';
 import { ListConfig } from '../../../shared/components/generic-list/generic-list.types';
 
 @Component({
   selector: 'app-boutiques',
-  imports: [ButtonModule, CardModule, ToastModule, GenericListComponent],
+  imports: [GenericListComponent, PageListLayoutComponent],
   providers: [MessageService],
   templateUrl: './boutiques.component.html',
   styleUrl: './boutiques.component.scss',

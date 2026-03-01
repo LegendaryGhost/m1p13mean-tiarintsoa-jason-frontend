@@ -1,6 +1,6 @@
 # Generic CRUD Components
 
-Two reusable shared components **must** be used for all CRUD list/form UI. Never build ad-hoc tables or dialog forms — always use these instead.
+Four reusable shared components **must** be used for all CRUD list/form UI. Never build ad-hoc tables, dialog forms, or page headers — always use these instead.
 
 ## `GenericListComponent` — `<app-generic-list>`
 
@@ -158,9 +158,62 @@ executeDelete() {
 
 ---
 
+## `PageListLayoutComponent` — `<app-page-list-layout>`
+
+Path: `src/app/shared/components/page-list-layout/`
+
+Use it as the **outer shell for every list page**. It renders the `p-card`, the page header (icon, title, subtitle, built-in refresh button), a slot for extra header action buttons, and a slot for dialogs/content outside the card.
+
+Never copy-paste `p-card` + card-header markup into a feature component — always use this wrapper.
+
+**Inputs/Outputs:**
+
+| Input / Output | Type | Description |
+|---|---|---|
+| `icon` (required) | `string` | PrimeNG icon without the `pi` prefix, e.g. `'pi-list'` |
+| `title` (required) | `string` | Page heading |
+| `subtitle` | `string` | Count/description line rendered below the title |
+| `loading` | `boolean` | Forwarded to the built-in "Actualiser" button |
+| `(refresh)` | `void` | Emitted when the user clicks "Actualiser" |
+
+**Content slots:**
+
+| Slot | Selector | Purpose |
+|---|---|---|
+| Header actions | `[headerActions]` | Extra buttons rendered after "Actualiser" |
+| Main content | *(default)* | The `<app-generic-list>` (or any main content) |
+| Extra content | `[extraContent]` | Dialogs and other elements rendered **outside** the card |
+
+**Template:**
+```html
+<app-page-list-layout
+  icon="pi-list"
+  title="My List"
+  [subtitle]="items().length + ' item(s)'"
+  [loading]="loading()"
+  (refresh)="loadItems()">
+
+  <!-- Optional: extra header buttons -->
+  <ng-container headerActions>
+    <p-button label="Nouveau" icon="pi pi-plus" (onClick)="openCreate()" />
+  </ng-container>
+
+  <!-- Main content -->
+  <app-generic-list [data]="items()" [loading]="loading()" [config]="listConfig" />
+
+  <!-- Dialogs and content outside the card -->
+  <ng-container extraContent>
+    <app-generic-form-dialog ... />
+    <app-generic-confirm-dialog ... />
+  </ng-container>
+</app-page-list-layout>
+```
+
+---
+
 ## Rules
 
-- Import all three from `src/app/shared/components/` (or directly from their subfolder).
-- The component importing them must list `GenericListComponent`, `GenericFormDialogComponent`, and/or `GenericConfirmDialogComponent` in its `imports` array.
-- Do **not** replicate table markup (`p-table`, `p-sortIcon`, action button rows), dialog form markup (`p-dialog` + manual field loops), or confirmation dialogs (`p-confirmDialog`, `ConfirmationService`) in feature components.
+- Import all four from `src/app/shared/components/` (or directly from their subfolder).
+- The component importing them must list `PageListLayoutComponent`, `GenericListComponent`, `GenericFormDialogComponent`, and/or `GenericConfirmDialogComponent` in its `imports` array.
+- Do **not** replicate table markup (`p-table`, `p-sortIcon`, action button rows), dialog form markup (`p-dialog` + manual field loops), confirmation dialogs (`p-confirmDialog`, `ConfirmationService`), or card-header/page-wrapper markup in feature components.
 

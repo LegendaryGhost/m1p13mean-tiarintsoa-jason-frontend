@@ -1,22 +1,18 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
-import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { UserService } from '../../../core/services/user.service';
 import { User } from '../../../core/models/user.model';
 import { GenericListComponent } from '../../../shared/components/generic-list/generic-list.component';
+import { PageListLayoutComponent } from '../../../shared/components/page-list-layout/page-list-layout.component';
 import { ListConfig } from '../../../shared/components/generic-list/generic-list.types';
 
 @Component({
   selector: 'app-pending-registrations',
   imports: [
-    ButtonModule,
-    CardModule,
-    ToastModule,
     ConfirmDialogModule,
     GenericListComponent,
+    PageListLayoutComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './pending-registrations.component.html',
