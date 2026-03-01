@@ -10,7 +10,6 @@ import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../core/services/auth.service';
-import { MockDataService } from '../core/services/mock-data.service';
 import { ThemeService } from '../core/services/theme.service';
 import { ThemeToggleComponent } from '../shared/components/theme-toggle/theme-toggle.component';
 
@@ -65,7 +64,7 @@ interface SidebarItem {
               <i class="pi pi-bars"></i>
             </button>
             <i class="pi pi-building header-icon"></i>
-            <h1>{{ mallName() }}</h1>
+            <h1>{{ mallName }}</h1>
           </div>
 
           <div class="header-right">
@@ -504,7 +503,6 @@ interface SidebarItem {
 export class LayoutComponent {
   authService = inject(AuthService);
   private router = inject(Router);
-  private mockDataService = inject(MockDataService);
   themeService = inject(ThemeService);
 
   // Footer
@@ -514,7 +512,7 @@ export class LayoutComponent {
   isSidebarCollapsed = signal<boolean>(typeof window !== 'undefined' && window.innerWidth <= 768);
 
   // Computed values
-  mallName = computed(() => this.mockDataService.centreCommercial().nom);
+  mallName = "La City";
 
   // Sidebar items - configurable for future expansion
   sidebarItems = signal<SidebarItem[]>([

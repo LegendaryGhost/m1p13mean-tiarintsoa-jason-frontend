@@ -16,9 +16,9 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
-import { BoutiqueService } from '../core/services/boutique.service';
+import { LocationService } from '../core/services/location.service';
 import { VisitTrackingService } from '../core/services/visit-tracking.service';
-import { Etage, Emplacement, Boutique, BoutiquePopulated } from '../core/models';
+import { Etage, Emplacement, EmplacementBase, BoutiquePopulated, LocationEmplacementPopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
 
@@ -37,6 +37,13 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
             (mousemove)="onCanvasMouseMove($event)"
             [attr.aria-label]="'Interactive mall map for ' + currentEtage()?.nom">
           </canvas>
+
+          @if (loadingSlots() || loadingLocations()) {
+            <div class="map-loading-overlay" role="status" aria-live="polite">
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+              <span>{{ loadingSlots() ? 'Chargement des emplacements…' : 'Chargement des boutiques…' }}</span>
+            </div>
+          }
 
           <div class="map-legend">
             <h3 class="legend-title">Légende</h3>
@@ -101,6 +108,27 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
       cursor: default;
+    }
+
+    .map-loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: color-mix(in srgb, var(--color-background-primary) 80%, transparent);
+      border-radius: 8px;
+      backdrop-filter: blur(2px);
+      color: var(--color-text-primary);
+      font-size: 0.9375rem;
+      pointer-events: none;
+
+      i {
+        font-size: 2rem;
+        color: var(--color-primary);
+      }
     }
 
     .map-legend {
@@ -176,7 +204,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private etageService = inject(EtageService);
   private emplacementService = inject(EmplacementService);
-  private boutiqueService = inject(BoutiqueService);
+  private locationService = inject(LocationService);
   private visitTrackingService = inject(VisitTrackingService);
   private router = inject(Router);
   private isBrowser = isPlatformBrowser(this.platformId);
@@ -187,11 +215,23 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   emplacements = signal<Emplacement[]>([]);
   selectedBoutique = signal<BoutiquePopulated | null>(null);
   showShopModal = signal<boolean>(false);
+  loadingSlots = signal(false);
+  loadingLocations = signal(false);
+  activeLocations = signal<LocationEmplacementPopulated[]>([]);
 
   // Computed
   currentEtage = computed<Etage | undefined>(() =>
     this.etages().find(e => e._id === this.selectedEtageId())
   );
+
+  readonly activeLocationMap = computed(() => {
+    const map = new Map<string, LocationEmplacementPopulated>();
+    this.activeLocations().forEach(loc => {
+      const id = typeof loc.emplacementId === 'string' ? loc.emplacementId : loc.emplacementId._id;
+      map.set(id, loc);
+    });
+    return map;
+  });
 
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -216,6 +256,14 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       effect(() => {
         const emplacements = this.emplacements();
         if (emplacements.length > 0 && this.ctx) {
+          this.drawMap();
+        }
+      });
+
+      // Redraw when active locations finish loading
+      effect(() => {
+        this.activeLocations();
+        if (this.emplacements().length > 0 && this.ctx) {
           this.drawMap();
         }
       });
@@ -264,10 +312,31 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadEmplacements(etageId: string): void {
-    this.emplacementService.getEmplacementsByEtage(etageId).subscribe(emplacements => {
-      this.emplacements.set(emplacements);
-      if (this.isBrowser) {
-        this.loadFloorPlanImage();
+    this.loadingSlots.set(true);
+    this.emplacementService.getEmplacementsByEtage(etageId).subscribe({
+      next: (emplacements) => {
+        this.emplacements.set(emplacements);
+        this.loadingSlots.set(false);
+        if (this.isBrowser) {
+          this.loadFloorPlanImage();
+        }
+        this.loadActiveLocations(etageId);
+      },
+      error: () => {
+        this.loadingSlots.set(false);
+      }
+    });
+  }
+
+  private loadActiveLocations(etageId: string): void {
+    this.loadingLocations.set(true);
+    this.locationService.getActiveLocations(etageId).subscribe({
+      next: (locations) => {
+        this.activeLocations.set(locations);
+        this.loadingLocations.set(false);
+      },
+      error: () => {
+        this.loadingLocations.set(false);
       }
     });
   }
@@ -324,19 +393,20 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     // Draw emplacements
     const emplacements = this.emplacements();
+    const locationMap = this.activeLocationMap();
     emplacements.forEach(emp => {
-      this.drawEmplacement(emp);
+      this.drawEmplacement(emp as EmplacementBase, locationMap.get(emp._id));
     });
   }
 
-  private drawEmplacement(emplacement: Emplacement): void {
+  private drawEmplacement(emplacement: EmplacementBase, location: LocationEmplacementPopulated | undefined): void {
     if (!this.ctx) return;
 
     const ctx = this.ctx;
     const coord = emplacement.coordonnees;
     const isHovered = this.hoveredEmplacement?._id === emplacement._id;
 
-    if (emplacement.statut === 'occupe') {
+    if (location) {
       // Occupied slot - filled with primary color
       ctx.fillStyle = isHovered
         ? this.getCSSVariable('--color-primary-dark')
@@ -348,7 +418,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       ctx.lineWidth = 2;
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
 
-      // Draw shop number
+      // Draw slot number
       ctx.fillStyle = this.getCSSVariable('--color-background-primary');
       ctx.font = 'bold 14px Inter, sans-serif';
       ctx.textAlign = 'center';
@@ -369,8 +439,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
       ctx.setLineDash([]);
 
-      // Draw "Available" text
-      ctx.fillStyle = this.getCSSVariable('--color-background-primary');
+      // Draw "Available" text — use text-secondary so it's visible in both themes
+      ctx.fillStyle = this.getCSSVariable('--color-text-secondary');
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -380,19 +450,12 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
   onCanvasClick(event: MouseEvent): void {
     const emplacement = this.getEmplacementAtPoint(event);
-
-    if (emplacement && emplacement.statut === 'occupe' && emplacement.boutiqueId) {
-      // Extract ID from boutiqueId (might be populated object or just ID string)
-      const boutiqueId = typeof emplacement.boutiqueId === 'object'
-        ? emplacement.boutiqueId._id
-        : emplacement.boutiqueId;
-
-      this.boutiqueService.getBoutiqueById(boutiqueId).subscribe(boutique => {
-        if (boutique) {
-          this.selectedBoutique.set(boutique);
-          this.showShopModal.set(true);
-        }
-      });
+    if (emplacement) {
+      const location = this.activeLocationMap().get(emplacement._id);
+      if (location) {
+        this.selectedBoutique.set(location.boutiqueId as BoutiquePopulated);
+        this.showShopModal.set(true);
+      }
     }
   }
 
@@ -401,7 +464,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     // Update cursor
     if (this.canvas) {
-      this.canvas.style.cursor = emplacement && emplacement.statut === 'occupe' ? 'pointer' : 'default';
+      const isOccupied = emplacement ? !!this.activeLocationMap().get(emplacement._id) : false;
+      this.canvas.style.cursor = isOccupied ? 'pointer' : 'default';
     }
 
     // Update hover state

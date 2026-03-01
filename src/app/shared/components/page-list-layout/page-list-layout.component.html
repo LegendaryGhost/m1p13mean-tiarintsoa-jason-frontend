@@ -1,0 +1,38 @@
+<div class="page-list-layout">
+  <p-toast />
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <div class="card-header-title">
+          <i [class]="'pi ' + icon() + ' header-icon'" aria-hidden="true"></i>
+          <div>
+            <h1>{{ title() }}</h1>
+            @if (subtitle()) {
+              <p class="header-subtitle">{{ subtitle() }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <p-button
+            label="Actualiser"
+            icon="pi pi-refresh"
+            [loading]="loading()"
+            (onClick)="refresh.emit()"
+            [outlined]="true"
+            severity="secondary"
+          />
+          <!-- Extra action buttons provided by the consumer -->
+          <ng-content select="[headerActions]" />
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Main content: the generic list -->
+    <ng-content />
+  </p-card>
+
+  <!-- Dialogs and other content outside the card -->
+  <ng-content select="[extraContent]" />
+</div>

@@ -587,10 +587,16 @@ export class AdminLayoutComponent {
       tooltip: 'Valider les inscriptions boutiques'
     },
     {
-      icon: 'pi-list',
-      label: 'Catégories',
-      route: '/back-office/categories',
-      tooltip: 'Gérer les catégories'
+      icon: 'pi-inbox',
+      label: 'Demandes de location',
+      route: '/back-office/demandes-emplacements',
+      tooltip: 'Gérer les demandes de location d\'emplacements'
+    },
+    {
+      icon: 'pi-calendar',
+      label: 'Locations',
+      route: '/back-office/locations',
+      tooltip: 'Voir les locations d\'emplacements'
     },
     {
       icon: 'pi-shopping-bag',
@@ -599,10 +605,10 @@ export class AdminLayoutComponent {
       tooltip: 'Gérer les boutiques'
     },
     {
-      icon: 'pi-inbox',
-      label: 'Demandes de location',
-      route: '/back-office/demandes-emplacements',
-      tooltip: 'Gérer les demandes de location d\'emplacements'
+      icon: 'pi-list',
+      label: 'Catégories',
+      route: '/back-office/categories',
+      tooltip: 'Gérer les catégories'
     },
     {
       icon: 'pi-map-marker',
@@ -615,7 +621,7 @@ export class AdminLayoutComponent {
       label: 'Étages',
       route: '/back-office/etages',
       tooltip: 'Gérer les étages'
-    }
+    },
   ]);
 
   constructor() {

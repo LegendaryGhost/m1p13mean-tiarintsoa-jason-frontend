@@ -1,33 +1,18 @@
-<div class="pending-registrations-container">
-  <p-toast />
-  <p-confirmDialog />
+<app-page-list-layout
+  icon="pi-clock"
+  title="Demandes d'inscription en attente"
+  [subtitle]="pendingUsers().length + ' demande(s) en attente'"
+  [loading]="loading()"
+  (refresh)="loadPendingUsers()">
 
-  <p-card>
-    <ng-template pTemplate="header">
-      <div class="card-header">
-        <div class="card-header-title">
-          <i class="pi pi-clock header-icon" aria-hidden="true"></i>
-          <div>
-            <h1>Demandes d'inscription en attente</h1>
-            <p class="header-subtitle">{{ pendingUsers().length }} demande(s) en attente</p>
-          </div>
-        </div>
-        <p-button
-          label="Actualiser"
-          icon="pi pi-refresh"
-          [loading]="loading()"
-          (onClick)="loadPendingUsers()"
-          [outlined]="true"
-          severity="secondary"
-        />
-      </div>
-    </ng-template>
+  <app-generic-list
+    [data]="pendingUsers()"
+    [loading]="loading()"
+    [config]="listConfig"
+  />
 
-    <app-generic-list
-      [data]="pendingUsers()"
-      [loading]="loading()"
-      [config]="listConfig"
-    />
-  </p-card>
-</div>
+  <ng-container extraContent>
+    <p-confirmDialog />
+  </ng-container>
+</app-page-list-layout>
 
