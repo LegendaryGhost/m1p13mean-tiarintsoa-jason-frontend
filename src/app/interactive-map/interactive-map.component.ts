@@ -18,6 +18,7 @@ import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
 import { LocationService } from '../core/services/location.service';
 import { VisitTrackingService } from '../core/services/visit-tracking.service';
+import { ThemeService } from '../core/services/theme.service';
 import { Etage, Emplacement, EmplacementBase, BoutiquePopulated, LocationEmplacementPopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
@@ -206,6 +207,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   private emplacementService = inject(EmplacementService);
   private locationService = inject(LocationService);
   private visitTrackingService = inject(VisitTrackingService);
+  private themeService = inject(ThemeService);
   private router = inject(Router);
   private isBrowser = isPlatformBrowser(this.platformId);
 
@@ -267,6 +269,14 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
           this.drawMap();
         }
       });
+
+      // Redraw when the theme changes (CSS variables update before next frame)
+      effect(() => {
+        this.themeService.currentTheme();
+        if (this.ctx) {
+          requestAnimationFrame(() => this.drawMap());
+        }
+      });
     }
   }
 
@@ -315,7 +325,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     this.loadingSlots.set(true);
     this.emplacementService.getEmplacementsByEtage(etageId).subscribe({
       next: (emplacements) => {
-        this.emplacements.set(emplacements);
+        // Spread to always produce a new reference so the signal fires even on HTTP 304
+        this.emplacements.set([...emplacements]);
         this.loadingSlots.set(false);
         if (this.isBrowser) {
           this.loadFloorPlanImage();
@@ -332,7 +343,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
     this.loadingLocations.set(true);
     this.locationService.getActiveLocations(etageId).subscribe({
       next: (locations) => {
-        this.activeLocations.set(locations);
+        // Spread to always produce a new reference so the signal fires even on HTTP 304
+        this.activeLocations.set([...locations]);
         this.loadingLocations.set(false);
       },
       error: () => {
