@@ -1,0 +1,31 @@
+<div class="locations-container">
+  <p-toast />
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <div class="card-header-title">
+          <i class="pi pi-map-marker header-icon" aria-hidden="true"></i>
+          <div>
+            <h1>Locations d'emplacements</h1>
+            <p class="header-subtitle">{{ locations().length }} location(s) enregistrée(s)</p>
+          </div>
+        </div>
+        <p-button
+          label="Actualiser"
+          icon="pi pi-refresh"
+          [loading]="loading()"
+          (onClick)="loadLocations()"
+          [outlined]="true"
+          severity="secondary"
+        />
+      </div>
+    </ng-template>
+
+    <app-generic-list
+      [data]="locations()"
+      [loading]="loading()"
+      [config]="listConfig"
+    />
+  </p-card>
+</div>

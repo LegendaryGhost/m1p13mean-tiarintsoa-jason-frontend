@@ -1,0 +1,31 @@
+<div class="boutiques-container">
+  <p-toast />
+
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <div class="card-header-title">
+          <i class="pi pi-shop header-icon" aria-hidden="true"></i>
+          <div>
+            <h1>Boutiques</h1>
+            <p class="header-subtitle">{{ boutiques().length }} boutique(s) enregistrée(s)</p>
+          </div>
+        </div>
+        <p-button
+          label="Actualiser"
+          icon="pi pi-refresh"
+          [loading]="loading()"
+          (onClick)="loadBoutiques()"
+          [outlined]="true"
+          severity="secondary"
+        />
+      </div>
+    </ng-template>
+
+    <app-generic-list
+      [data]="boutiques()"
+      [loading]="loading()"
+      [config]="listConfig"
+    />
+  </p-card>
+</div>

@@ -1,13 +1,13 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiService } from './api.service';
-import { LocationEmplacementPopulated } from '../models/location-emplacement.model';
+import { LocationEmplacementBase, LocationEmplacementPopulated } from '../models/location-emplacement.model';
 import { ApiResponse } from '../models/api-response.interface';
+import { CrudService } from './crud.service';
 
 @Injectable({ providedIn: 'root' })
-export class LocationService {
-  private apiService = inject(ApiService);
+export class LocationService extends CrudService<LocationEmplacementBase, LocationEmplacementPopulated> {
+  protected override endpoint = 'locations';
 
   /**
    * Returns all active locations for a given floor.
@@ -15,7 +15,7 @@ export class LocationService {
    */
   getActiveLocations(etageId: string): Observable<LocationEmplacementPopulated[]> {
     return this.apiService
-      .get<ApiResponse<LocationEmplacementPopulated[]>>(`locations/actives?etageId=${etageId}`)
+      .get<ApiResponse<LocationEmplacementPopulated[]>>(`${this.endpoint}/actives?etageId=${etageId}`)
       .pipe(map((res) => res.data));
   }
 }
