@@ -31,6 +31,7 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type EditMode = 'move' | 'draw';
+type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
 interface PendingCreate {
   tempId: string;
@@ -42,6 +43,15 @@ interface PendingCreate {
 interface PendingMove {
   id: string;
   coordonnees: EmplacementCoordonnees;
+}
+
+interface ResizeState {
+  id: string;
+  handle: ResizeHandle;
+  startX: number;
+  startY: number;
+  origCoords: EmplacementCoordonnees;
+  tempCoords: EmplacementCoordonnees;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -103,6 +113,7 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
   private drawStart: { x: number; y: number } | null = null;
   private drawRect: EmplacementCoordonnees | null = null;
   private dragState: { id: string; offsetX: number; offsetY: number; tempCoords: EmplacementCoordonnees } | null = null;
+  private resizeState: ResizeState | null = null;
   private hoveredId: string | null = null;
 
   // ── Computed ─────────────────────────────────────────────────────
@@ -398,6 +409,10 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
       ctx.strokeStyle = '#f59e0b';
       ctx.lineWidth = 3;
       ctx.strokeRect(coord.x - 2, coord.y - 2, coord.width + 4, coord.height + 4);
+      // Resize handles (only in move mode)
+      if (this.editMode() === 'move') {
+        this.drawResizeHandles(ctx, coord);
+      }
     }
 
     // Label
@@ -423,23 +438,44 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
     if (this.editMode() === 'draw') {
       this.drawStart = { x, y };
       this.drawRect = { x, y, width: 0, height: 0 };
-    } else {
-      // move mode: find clicked emplacement
-      const emp = this.getEmplacementAt(x, y);
-      if (emp) {
-        this.selectedId.set(emp.id);
-        this.cdr.detectChanges();
-        this.dragState = {
-          id: emp.id,
-          offsetX: x - emp.coordonnees.x,
-          offsetY: y - emp.coordonnees.y,
-          tempCoords: { ...emp.coordonnees },
-        };
-      } else {
-        // Click on empty space deselects
-        this.selectedId.set(null);
-        this.cdr.detectChanges();
+      return;
+    }
+
+    // move mode: check resize handles on selected slot first
+    const selectedId = this.selectedId();
+    if (selectedId) {
+      const selEmp = this.allEmplacements().find(e => e.id === selectedId);
+      if (selEmp) {
+        const handle = this.getResizeHandleAt(x, y, selEmp.coordonnees);
+        if (handle) {
+          this.resizeState = {
+            id: selectedId,
+            handle,
+            startX: x,
+            startY: y,
+            origCoords: { ...selEmp.coordonnees },
+            tempCoords: { ...selEmp.coordonnees },
+          };
+          return;
+        }
       }
+    }
+
+    // Then check for drag
+    const emp = this.getEmplacementAt(x, y);
+    if (emp) {
+      this.selectedId.set(emp.id);
+      this.cdr.detectChanges();
+      this.dragState = {
+        id: emp.id,
+        offsetX: x - emp.coordonnees.x,
+        offsetY: y - emp.coordonnees.y,
+        tempCoords: { ...emp.coordonnees },
+      };
+    } else {
+      // Click on empty space deselects
+      this.selectedId.set(null);
+      this.cdr.detectChanges();
     }
   }
 
@@ -460,6 +496,13 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.editMode() === 'move' && this.resizeState) {
+      const newCoords = this.applyResize(this.resizeState, x, y);
+      this.resizeState.tempCoords = newCoords;
+      this.drawMapWithOverride(this.resizeState.id, newCoords);
+      return;
+    }
+
     if (this.editMode() === 'move' && this.dragState) {
       const newCoords: EmplacementCoordonnees = {
         x: Math.max(0, Math.min(x - this.dragState.offsetX, this.canvas.width - this.dragState.tempCoords.width)),
@@ -468,18 +511,36 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
         height: this.dragState.tempCoords.height,
       };
       this.dragState.tempCoords = newCoords;
-
-      // Optimistic redraw using direct canvas, bypassing signal to avoid re-render lag
-      this.drawMapWithDragOverride(this.dragState.id, newCoords);
+      this.drawMapWithOverride(this.dragState.id, newCoords);
       return;
+    }
+
+    // Cursor: check resize handles on selected slot first
+    if (this.editMode() === 'move') {
+      const selectedId = this.selectedId();
+      if (selectedId) {
+        const selEmp = this.allEmplacements().find(e => e.id === selectedId);
+        if (selEmp) {
+          const handle = this.getResizeHandleAt(x, y, selEmp.coordonnees);
+          if (handle) {
+            if (this.canvas.style.cursor !== this.getResizeCursor(handle)) {
+              this.canvas.style.cursor = this.getResizeCursor(handle);
+              this.hoveredId = null;
+              this.drawMap();
+            }
+            return;
+          }
+        }
+      }
     }
 
     // Update hover
     const emp = this.getEmplacementAt(x, y);
     const newHover = emp?.id ?? null;
-    if (newHover !== this.hoveredId) {
+    const wantedCursor = emp ? 'grab' : (this.editMode() === 'draw' ? 'crosshair' : 'default');
+    if (newHover !== this.hoveredId || this.canvas.style.cursor !== wantedCursor) {
       this.hoveredId = newHover;
-      this.canvas.style.cursor = emp ? 'grab' : (this.editMode() === 'draw' ? 'crosshair' : 'default');
+      this.canvas.style.cursor = wantedCursor;
       this.drawMap();
     }
   }
@@ -506,38 +567,32 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    if (this.editMode() === 'move' && this.resizeState) {
+      const { id, tempCoords } = this.resizeState;
+      this.resizeState = null;
+      this.commitCoords(id, tempCoords);
+      this.canvas!.style.cursor = 'default';
+      return;
+    }
+
     if (this.editMode() === 'move' && this.dragState) {
       const { id, tempCoords } = this.dragState;
       this.dragState = null;
-
-      // Commit the move as a pending change
-      const isNew = this.pendingCreates().some(c => c.tempId === id);
-      if (isNew) {
-        this.pendingCreates.update(list =>
-          list.map(c => c.tempId === id ? { ...c, coordonnees: tempCoords } : c)
-        );
-      } else {
-        this.pendingMoves.update(map => {
-          const next = new Map(map);
-          next.set(id, tempCoords);
-          return next;
-        });
-      }
+      this.commitCoords(id, tempCoords);
       this.canvas!.style.cursor = 'grab';
     }
   }
 
   onCanvasMouseLeave(): void {
+    if (this.resizeState) {
+      const { id, tempCoords } = this.resizeState;
+      this.resizeState = null;
+      this.commitCoords(id, tempCoords);
+    }
     if (this.dragState) {
-      // Commit drag anyway
       const { id, tempCoords } = this.dragState;
       this.dragState = null;
-      const isNew = this.pendingCreates().some(c => c.tempId === id);
-      if (isNew) {
-        this.pendingCreates.update(list => list.map(c => c.tempId === id ? { ...c, coordonnees: tempCoords } : c));
-      } else {
-        this.pendingMoves.update(map => { const next = new Map(map); next.set(id, tempCoords); return next; });
-      }
+      this.commitCoords(id, tempCoords);
     }
     if (this.drawStart) {
       this.drawStart = null;
@@ -564,8 +619,96 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
     }) ?? null;
   }
 
-  /** Redraws the map but substitutes a temporary position for a dragged slot */
-  private drawMapWithDragOverride(id: string, overrideCoords: EmplacementCoordonnees): void {
+  // ── Resize helpers ────────────────────────────────────────────────
+
+  private getHandlePoints(coord: EmplacementCoordonnees): Record<ResizeHandle, { x: number; y: number }> {
+    const { x, y, width: w, height: h } = coord;
+    return {
+      nw: { x, y },
+      n:  { x: x + w / 2, y },
+      ne: { x: x + w, y },
+      e:  { x: x + w, y: y + h / 2 },
+      se: { x: x + w, y: y + h },
+      s:  { x: x + w / 2, y: y + h },
+      sw: { x, y: y + h },
+      w:  { x, y: y + h / 2 },
+    };
+  }
+
+  private drawResizeHandles(ctx: CanvasRenderingContext2D, coord: EmplacementCoordonnees): void {
+    const handles = this.getHandlePoints(coord);
+    const R = 5;
+    for (const pt of Object.values(handles)) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, R, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  private getResizeHandleAt(x: number, y: number, coord: EmplacementCoordonnees): ResizeHandle | null {
+    const handles = this.getHandlePoints(coord);
+    const HIT = 8;
+    for (const [handle, pt] of Object.entries(handles) as [ResizeHandle, { x: number; y: number }][]) {
+      if (Math.abs(x - pt.x) <= HIT && Math.abs(y - pt.y) <= HIT) {
+        return handle;
+      }
+    }
+    return null;
+  }
+
+  private getResizeCursor(handle: ResizeHandle): string {
+    switch (handle) {
+      case 'nw': case 'se': return 'nwse-resize';
+      case 'ne': case 'sw': return 'nesw-resize';
+      case 'n':  case 's':  return 'ns-resize';
+      case 'e':  case 'w':  return 'ew-resize';
+    }
+  }
+
+  private applyResize(state: ResizeState, x: number, y: number): EmplacementCoordonnees {
+    const dx = x - state.startX;
+    const dy = y - state.startY;
+    const MIN = 10;
+    let { x: ox, y: oy, width: ow, height: oh } = state.origCoords;
+    let nx = ox, ny = oy, nw = ow, nh = oh;
+
+    switch (state.handle) {
+      case 'nw': nx = ox + dx; ny = oy + dy; nw = ow - dx; nh = oh - dy; break;
+      case 'n':                ny = oy + dy;               nh = oh - dy; break;
+      case 'ne':               ny = oy + dy; nw = ow + dx; nh = oh - dy; break;
+      case 'e':                              nw = ow + dx;               break;
+      case 'se':                             nw = ow + dx; nh = oh + dy; break;
+      case 's':                                            nh = oh + dy; break;
+      case 'sw': nx = ox + dx;              nw = ow - dx; nh = oh + dy; break;
+      case 'w':  nx = ox + dx;              nw = ow - dx;               break;
+    }
+
+    // Enforce minimum size
+    if (nw < MIN) { if ('nw sw w'.includes(state.handle)) nx = ox + ow - MIN; nw = MIN; }
+    if (nh < MIN) { if ('nw n ne'.includes(state.handle)) ny = oy + oh - MIN; nh = MIN; }
+    // Clamp to canvas bounds
+    nx = Math.max(0, nx);
+    ny = Math.max(0, ny);
+
+    return { x: Math.round(nx), y: Math.round(ny), width: Math.round(nw), height: Math.round(nh) };
+  }
+
+  /** Commit a coordinate change (move or resize) as a pending change */
+  private commitCoords(id: string, coords: EmplacementCoordonnees): void {
+    const isNew = this.pendingCreates().some(c => c.tempId === id);
+    if (isNew) {
+      this.pendingCreates.update(list => list.map(c => c.tempId === id ? { ...c, coordonnees: coords } : c));
+    } else {
+      this.pendingMoves.update(map => { const next = new Map(map); next.set(id, coords); return next; });
+    }
+  }
+
+  /** Redraws the map substituting a temporary position/size for an active drag or resize */
+  private drawMapWithOverride(id: string, overrideCoords: EmplacementCoordonnees): void {
     if (!this.ctx || !this.canvas) return;
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -603,6 +746,7 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
     this.drawStart = null;
     this.drawRect = null;
     this.dragState = null;
+    this.resizeState = null;
     if (this.canvas) {
       this.canvas.style.cursor = mode === 'draw' ? 'crosshair' : 'default';
     }
@@ -743,6 +887,7 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
     this.drawRect = null;
     this.drawStart = null;
     this.dragState = null;
+    this.resizeState = null;
     this.drawMap();
   }
 
