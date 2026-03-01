@@ -42,13 +42,18 @@
       <!-- Declared INSIDE [formGroup] so formControlName directives  -->
       <!-- can resolve ControlContainer at the declaration site.      -->
       <ng-template #fieldTpl let-field>
-        <div class="form-group">
-          <label [for]="'gfd-' + field.key" class="form-label">
-            {{ field.label }}
-            @if (field.required) {
-              <span class="required" aria-hidden="true">*</span>
-            }
-          </label>
+        @if (field.type === 'label') {
+          <p class="form-section-label">{{ field.label }}</p>
+        } @else {
+        <div class="form-group" [class.form-group--checkbox]="field.type === 'checkbox'">
+          @if (field.type !== 'checkbox') {
+            <label [for]="'gfd-' + field.key" class="form-label">
+              {{ field.label }}
+              @if (field.required) {
+                <span class="required" aria-hidden="true">*</span>
+              }
+            </label>
+          }
 
           @switch (field.type) {
 
@@ -189,6 +194,7 @@
             <small class="field-error" role="alert">{{ getFieldError(field.key) }}</small>
           }
         </div>
+        }
       </ng-template>
     </form>
   }

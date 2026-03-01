@@ -80,7 +80,7 @@
               }
 
               @default {
-                {{ getCellValue(row, col) ?? '—' }}
+                {{ col.formatter ? col.formatter(row) : (getCellValue(row, col) ?? '—') }}
               }
             }
           </td>

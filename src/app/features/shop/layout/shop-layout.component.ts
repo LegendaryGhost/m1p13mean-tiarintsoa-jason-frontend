@@ -588,10 +588,16 @@ export class ShopLayoutComponent {
       tooltip: 'Tableau de bord de votre boutique'
     },
     {
+      icon: 'pi-shop',
+      label: 'Mes boutiques',
+      route: '/boutique/mes-boutiques',
+      tooltip: 'Voir et gérer mes boutiques'
+    },
+    {
       icon: 'pi-map-marker',
       label: 'Mes demandes',
       route: '/boutique/mes-demandes',
-      tooltip: 'Mes demandes d\'emplacement'
+      tooltip: 'Mes demandes de location'
     },
     {
       icon: 'pi-box',
@@ -605,12 +611,6 @@ export class ShopLayoutComponent {
       route: '/boutique/promotions',
       tooltip: 'Gérer vos promotions'
     },
-    {
-      icon: 'pi-info-circle',
-      label: 'Ma boutique',
-      route: '/boutique/informations',
-      tooltip: 'Informations de votre boutique'
-    }
   ]);
 
   constructor() {

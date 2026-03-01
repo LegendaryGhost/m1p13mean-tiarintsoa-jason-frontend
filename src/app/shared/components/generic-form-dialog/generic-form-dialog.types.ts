@@ -6,7 +6,8 @@ export type FieldType =
   | 'number'
   | 'date'
   | 'checkbox'
-  | 'radio';
+  | 'radio'
+  | 'label';
 
 export interface SelectOption {
   label: string;
