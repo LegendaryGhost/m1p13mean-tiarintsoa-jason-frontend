@@ -12,3 +12,4 @@ export * from './demande-boutique.model';
 export * from './produit.model';
 export * from './promotion.model';
 export * from './notification.model';
+export * from './location-emplacement.model';
