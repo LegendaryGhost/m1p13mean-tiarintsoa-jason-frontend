@@ -599,28 +599,28 @@ export class AdminLayoutComponent {
       tooltip: 'Voir les locations d\'emplacements'
     },
     {
-      icon: 'pi-shopping-bag',
-      label: 'Boutiques',
-      route: '/back-office/boutiques',
-      tooltip: 'Gérer les boutiques'
-    },
-    {
       icon: 'pi-list',
       label: 'Catégories',
       route: '/back-office/categories',
       tooltip: 'Gérer les catégories'
     },
     {
-      icon: 'pi-map-marker',
-      label: 'Emplacements',
-      route: '/back-office/emplacements',
-      tooltip: 'Gérer les emplacements'
+      icon: 'pi-shopping-bag',
+      label: 'Boutiques',
+      route: '/back-office/boutiques',
+      tooltip: 'Gérer les boutiques'
     },
     {
       icon: 'pi-building',
       label: 'Étages',
       route: '/back-office/etages',
       tooltip: 'Gérer les étages'
+    },
+    {
+      icon: 'pi-map-marker',
+      label: 'Emplacements',
+      route: '/back-office/emplacements',
+      tooltip: 'Gérer les emplacements'
     },
   ]);
 

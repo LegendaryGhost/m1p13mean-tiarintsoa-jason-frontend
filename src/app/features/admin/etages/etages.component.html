@@ -1,0 +1,59 @@
+<app-page-list-layout
+  icon="pi-building"
+  title="Gestion des étages"
+  [subtitle]="etages().length + ' étage(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadEtages()">
+
+  <!-- Extra header actions -->
+  <ng-container headerActions>
+    <p-button
+      label="Nouvel étage"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </ng-container>
+
+  <app-generic-list
+    [data]="etages()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <p-button
+      emptyAction
+      label="Créer un étage"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </app-generic-list>
+
+  <!-- Dialogs -->
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields"
+      [visible]="dialogVisible()"
+      [title]="isEditing() ? 'Modifier l\'étage' : 'Nouvel étage'"
+      [saving]="saving()"
+      [saveLabel]="isEditing() ? 'Enregistrer' : 'Créer'"
+      [saveIcon]="isEditing() ? 'pi-check' : 'pi-plus'"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="saveEtage()"
+      (cancel)="closeDialog()"
+    />
+
+    <app-generic-confirm-dialog
+      [visible]="deleteDialogVisible()"
+      header="Supprimer l'étage"
+      [message]="'Voulez-vous vraiment supprimer l\'étage <strong>' + (deletingEtage()?.nom ?? '') + '</strong> ? Cette action est irréversible.'"
+      confirmLabel="Supprimer"
+      confirmIcon="pi-trash"
+      severity="danger"
+      [loading]="deleting()"
+      (confirm)="executeDelete()"
+      (cancel)="cancelDelete()"
+      (visibleChange)="$event ? null : cancelDelete()"
+    />
+  </ng-container>
+
+</app-page-list-layout>
