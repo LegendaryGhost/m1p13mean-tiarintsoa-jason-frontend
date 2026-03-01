@@ -5,6 +5,7 @@ import { DemandesBoutiquesComponent } from './demandes-boutiques/demandes-boutiq
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { BoutiquesComponent } from './boutiques/boutiques.component';
 import { LocationsComponent } from './locations/locations.component';
+import { EtagesComponent } from './etages/etages.component';
 
 export const ADMIN_ROUTES: Routes = [
   { path: '', component: DashboardComponent },
@@ -13,5 +14,6 @@ export const ADMIN_ROUTES: Routes = [
   { path: 'demandes-emplacements', component: DemandesBoutiquesComponent },
   { path: 'boutiques', component: BoutiquesComponent },
   { path: 'locations', component: LocationsComponent },
+  { path: 'etages', component: EtagesComponent },
 ];
 export default ADMIN_ROUTES;
