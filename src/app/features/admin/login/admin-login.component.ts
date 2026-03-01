@@ -209,9 +209,9 @@ export class AdminLoginComponent {
   private router = inject(Router);
 
   // Component State using Signals
-  email = signal('admin@centrecommercial.mg');
-  password = signal('password123');
-  passwordValue = 'password123';
+  email = signal('admin@lacity.mg');
+  password = signal('LaCity2026*!');
+  passwordValue = 'LaCity2026*!';
   isLoading = signal(false);
   errorMessage = signal('');
 
