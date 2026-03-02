@@ -6,6 +6,11 @@ interface PageViewPayload {
   type: 'site';
 }
 
+interface BoutiqueViewPayload {
+  type: 'boutique';
+  boutiqueId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,6 +28,15 @@ export class VisitTrackingService {
 
     const payload: PageViewPayload = {
       type: 'site',
+    };
+
+    return this.apiService.post('visites', payload);
+  }
+
+  trackBoutiqueVisit(boutiqueId: string): Observable<unknown> {
+    const payload: BoutiqueViewPayload = {
+      type: 'boutique',
+      boutiqueId,
     };
 
     return this.apiService.post('visites', payload);
