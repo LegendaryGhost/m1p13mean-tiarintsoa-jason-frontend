@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -48,6 +49,10 @@ export class MesBoutiquesComponent implements OnInit {
   dialogVisible = signal(false);
   saving = signal(false);
 
+  /** ID of the boutique currently being edited; null when none is open */
+  editingId = signal<string | null>(null);
+  isEditing = computed(() => this.editingId() !== null);
+
   form: FormGroup = this.fb.group({
     nom: ['', [Validators.required]],
     categorieId: ['', [Validators.required]],
@@ -89,6 +94,13 @@ export class MesBoutiquesComponent implements OnInit {
       },
       { field: 'createdAt', header: 'Date de création', cellType: 'date', sortable: true },
     ],
+    actions: [
+      {
+        icon: 'pi-pencil',
+        tooltip: 'Modifier',
+        action: (row) => this.openEditDialog(row),
+      },
+    ],
   };
 
   ngOnInit() {
@@ -127,8 +139,9 @@ export class MesBoutiquesComponent implements OnInit {
     });
   }
 
-  openCreateDialog() {
-    this.formFields.set([
+  // ── Shared field-definition builder ─────────────────────────────────
+  private buildFormFields(): FieldDef[] {
+    return [
       {
         key: 'nom',
         label: 'Nom de la boutique',
@@ -181,28 +194,38 @@ export class MesBoutiquesComponent implements OnInit {
         type: 'text',
         placeholder: 'https://example.com/logo.png',
       },
-    ]);
+    ];
+  }
+
+  // ── Dialog: edit an existing boutique ───────────────────────────────
+  openEditDialog(boutique: BoutiquePopulated) {
+    this.editingId.set(boutique._id);
+    this.formFields.set(this.buildFormFields());
+
+    // Populate form with existing data
+    const catId = typeof boutique.categorieId === 'object' && boutique.categorieId !== null
+      ? (boutique.categorieId as any)._id
+      : boutique.categorieId;
+
+    const joursMap: Record<string, boolean> = {};
+    JOURS.forEach((j) => (joursMap[j] = (boutique.joursOuverture ?? []).includes(j)));
 
     this.form.reset({
-      nom: '',
-      categorieId: '',
-      heureOuverture: '',
-      heureFermeture: '',
-      description: '',
-      logo: '',
-      lundi: false,
-      mardi: false,
-      mercredi: false,
-      jeudi: false,
-      vendredi: false,
-      samedi: false,
-      dimanche: false,
+      nom: boutique.nom ?? '',
+      categorieId: catId ?? '',
+      heureOuverture: boutique.heureOuverture ?? '',
+      heureFermeture: boutique.heureFermeture ?? '',
+      description: boutique.description ?? '',
+      logo: boutique.logo ?? '',
+      ...joursMap,
     });
+
     this.dialogVisible.set(true);
   }
 
   closeDialog() {
     this.dialogVisible.set(false);
+    this.editingId.set(null);
     this.form.reset();
   }
 
@@ -215,8 +238,7 @@ export class MesBoutiquesComponent implements OnInit {
     const v = this.form.value;
     const joursOuverture = JOURS.filter((j) => v[j]);
 
-    this.saving.set(true);
-    this.boutiqueService.createMaBoutique({
+    const payload = {
       nom: v.nom,
       categorieId: v.categorieId,
       heureOuverture: v.heureOuverture,
@@ -224,19 +246,30 @@ export class MesBoutiquesComponent implements OnInit {
       joursOuverture,
       ...(v.description ? { description: v.description } : {}),
       ...(v.logo ? { logo: v.logo } : {}),
-    }).subscribe({
+    };
+
+    this.saving.set(true);
+
+    const id = this.editingId();
+    const request$ = id
+      ? this.boutiqueService.updateMaBoutique(id, payload)
+      : this.boutiqueService.createMaBoutique(payload);
+
+    request$.subscribe({
       next: () => {
         this.messageService.add({
           severity: 'success',
-          summary: 'Boutique ajoutée',
-          detail: 'Votre boutique a été soumise et est en attente de validation',
+          summary: id ? 'Boutique modifiée' : 'Boutique ajoutée',
+          detail: id
+            ? 'Les informations de votre boutique ont été mises à jour'
+            : 'Votre boutique a été soumise et est en attente de validation',
         });
         this.saving.set(false);
         this.closeDialog();
         this.loadBoutiques();
       },
       error: (err) => {
-        const detail = err?.error?.message ?? 'Impossible de créer votre boutique';
+        const detail = err?.error?.message ?? (id ? 'Impossible de modifier votre boutique' : 'Impossible de créer votre boutique');
         this.messageService.add({ severity: 'error', summary: 'Erreur', detail });
         this.saving.set(false);
       },

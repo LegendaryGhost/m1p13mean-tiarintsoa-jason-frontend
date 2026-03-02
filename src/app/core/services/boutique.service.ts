@@ -41,6 +41,17 @@ export class BoutiqueService extends CrudService<BoutiqueBase, BoutiquePopulated
       .pipe(map((r) => r.data));
   }
 
+  /**
+   * Updates an existing shop owned by the authenticated boutique user.
+   * Calls PUT /boutiques/mes-boutiques/:id (auth-guarded, boutique role).
+   */
+  updateMaBoutique(id: string, payload: Partial<CreateBoutiquePayload>): Observable<BoutiquePopulated> {
+    return this.apiService
+      .put<ApiResponse<BoutiquePopulated>>(`${this.endpoint}/mes-boutiques/${id}`, payload)
+      .pipe(map((r) => r.data));
+  }
+
+
   // Alias methods for backward compatibility
   getAllBoutiques() {
     return this.getAll();
