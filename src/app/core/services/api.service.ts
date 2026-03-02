@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -11,8 +11,14 @@ export class ApiService {
   // Default to localhost if environment var isn't set yet (safer dev experience)
   private baseUrl = environment.apiUrl || 'http://localhost:3000/api';
 
+  /** Headers added to every GET to prevent 304 stale-cache responses. */
+  private noCacheHeaders = new HttpHeaders({
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
+  });
+
   get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}/${endpoint}`);
+    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { headers: this.noCacheHeaders });
   }
 
   post<T>(endpoint: string, data: any): Observable<T> {
