@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CardModule } from 'primeng/card';
-import { TagModule } from 'primeng/tag';
+import { ChartModule } from 'primeng/chart';
+import { ChartData, ChartOptions } from 'chart.js';
 import { DashboardService } from '../../../core/services/dashboard.service';
 
 interface VisitorDataPoint {
-  day: string;
+  label: string;
   value: number;
 }
 
@@ -13,9 +15,18 @@ interface ShopVisitStat {
   visits: number;
 }
 
+interface DashboardChartColors {
+  primary: string;
+  textPrimary: string;
+  textSecondary: string;
+  border: string;
+  warning: string;
+  success: string;
+}
+
 @Component({
   selector: 'app-dashboard',
-  imports: [CardModule, TagModule],
+  imports: [CardModule, ChartModule],
   template: `
     <div class="dashboard-container">
       <div class="dashboard-header">
@@ -37,18 +48,9 @@ interface ShopVisitStat {
             </div>
 
             <div class="slot-distribution-content">
-              <div class="pie-chart-wrapper">
-                <div
-                  class="pie-chart"
-                  role="img"
-                  [style.--occupied-percent]="occupancyRate() + '%'"
-                  [attr.aria-label]="'Camembert: ' + occupancyRate() + '% occupés et ' + freeRate() + '% libres'"
-                >
-                  <div class="pie-center">
-                    <strong>{{ occupancyRate() }}%</strong>
-                    <span>occupés</span>
-                  </div>
-                </div>
+              <div class="doughnut-chart-container">
+                <p-chart type="doughnut" [data]="slotChartData()" [options]="slotChartOptions()" />
+                <p class="doughnut-center-label"><strong>{{ occupancyRate() }}%</strong> occupés</p>
               </div>
 
               <div class="slot-legend">
@@ -78,26 +80,33 @@ interface ShopVisitStat {
       <section class="content-grid">
         <p-card>
           <div class="section-header">
-            <h2>Nombre de visiteurs</h2>
-            <p>Évolution sur {{ periodDays() }} jours</p>
-          </div>
-
-          <div class="line-chart" role="img" aria-label="Courbe de fréquentation des visiteurs sur 7 jours">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-              <polyline
-                [attr.points]="visitorChartPoints()"
-                class="line"
-              />
-            </svg>
-          </div>
-
-          <div class="chart-legend">
-            @for (point of visitorSeries(); track point.day) {
-              <div class="legend-item">
-                <span class="day">{{ point.day }}</span>
-                <span class="count">{{ point.value }}</span>
+            <div class="section-title-row">
+              <div>
+                <h2>Nombre de visiteurs</h2>
+                <p>Évolution sur {{ periodDays() }} jours</p>
               </div>
-            }
+
+              <div class="period-selector" role="group" aria-label="Sélection de la période">
+                <button
+                  type="button"
+                  class="period-button"
+                  [class.active]="periodDays() === 7"
+                  (click)="setPeriodDays(7)">
+                  7 jours
+                </button>
+                <button
+                  type="button"
+                  class="period-button"
+                  [class.active]="periodDays() === 30"
+                  (click)="setPeriodDays(30)">
+                  30 jours
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="line-chart">
+            <p-chart type="line" [data]="visitorChartData()" [options]="visitorChartOptions()" />
           </div>
 
           <div class="chart-summary">
@@ -184,45 +193,19 @@ interface ShopVisitStat {
       gap: 1rem;
     }
 
-    .pie-chart-wrapper {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
+    .doughnut-chart-container {
+      width: min(100%, 280px);
+      margin: 0 auto;
 
-    .pie-chart {
-      --occupied-percent: 50%;
-      width: 170px;
-      height: 170px;
-      border-radius: 999px;
-      background: conic-gradient(
-        var(--color-warning) 0% var(--occupied-percent),
-        var(--color-success) var(--occupied-percent) 100%
-      );
-      display: grid;
-      place-items: center;
-      flex-shrink: 0;
-    }
-
-    .pie-center {
-      width: 110px;
-      height: 110px;
-      border-radius: 999px;
-      background: var(--color-background-primary);
-      border: 1px solid var(--color-border);
-      display: grid;
-      place-items: center;
-      text-align: center;
-      gap: 0.125rem;
-
-      strong {
-        color: var(--color-text-primary);
-        font-size: 1.375rem;
-      }
-
-      span {
+      .doughnut-center-label {
+        margin: 0.5rem 0 0;
+        text-align: center;
         color: var(--color-text-secondary);
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
+
+        strong {
+          color: var(--color-text-primary);
+        }
       }
     }
 
@@ -279,6 +262,14 @@ interface ShopVisitStat {
     }
 
     .section-header {
+      .section-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
       h2 {
         margin: 0;
         color: var(--color-text-primary);
@@ -292,50 +283,39 @@ interface ShopVisitStat {
       }
     }
 
+    .period-selector {
+      display: inline-flex;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .period-button {
+      border: none;
+      background: var(--color-background-primary);
+      color: var(--color-text-secondary);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+
+      &:not(:last-child) {
+        border-right: 1px solid var(--color-border);
+      }
+
+      &.active {
+        background: color-mix(in srgb, var(--color-primary) 12%, var(--color-background-primary));
+        color: var(--color-primary);
+      }
+    }
+
     .line-chart {
       margin-top: 1rem;
       border: 1px solid var(--color-border);
       border-radius: 8px;
       background: color-mix(in srgb, var(--color-primary) 4%, var(--color-background-primary));
       padding: 0.75rem;
-
-      svg {
-        width: 100%;
-        height: 220px;
-        display: block;
-      }
-
-      .line {
-        fill: none;
-        stroke: var(--color-primary);
-        stroke-width: 2.5;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-    }
-
-    .chart-legend {
-      margin-top: 0.75rem;
-      display: grid;
-      grid-template-columns: repeat(7, minmax(60px, 1fr));
-      gap: 0.5rem;
-
-      .legend-item {
-        display: grid;
-        justify-items: center;
-        gap: 0.125rem;
-
-        .day {
-          color: var(--color-text-secondary);
-          font-size: 0.8125rem;
-        }
-
-        .count {
-          color: var(--color-text-primary);
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-      }
+      min-height: 280px;
     }
 
     .chart-summary {
@@ -412,10 +392,6 @@ interface ShopVisitStat {
       .content-grid {
         grid-template-columns: 1fr;
       }
-
-      .chart-legend {
-        grid-template-columns: repeat(4, minmax(60px, 1fr));
-      }
     }
 
     @media (max-width: 768px) {
@@ -426,16 +402,23 @@ interface ShopVisitStat {
       .stats-grid {
         grid-template-columns: 1fr;
       }
-
-      .chart-legend {
-        grid-template-columns: repeat(2, minmax(60px, 1fr));
-      }
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+
+  readonly chartColors = signal<DashboardChartColors>({
+    primary: '#1976D2',
+    textPrimary: '#212121',
+    textSecondary: '#616161',
+    border: '#E0E0E0',
+    warning: '#FF9800',
+    success: '#4CAF50',
+  });
 
   readonly freeSlots = signal(0);
   readonly occupiedSlots = signal(0);
@@ -449,19 +432,169 @@ export class DashboardComponent implements OnInit {
     { name: 'Maison Gourmande', visits: 1498 },
   ]);
 
+  readonly slotChartData = computed<ChartData<'doughnut'>>(() => {
+    const colors = this.chartColors();
+    return {
+      labels: ['Occupés', 'Libres'],
+      datasets: [
+        {
+          data: [this.occupiedSlots(), this.freeSlots()],
+          backgroundColor: [colors.warning, colors.success],
+          borderColor: colors.border,
+          borderWidth: 1,
+        },
+      ],
+    };
+  });
+
+  readonly visitorChartData = computed<ChartData<'line'>>(() => {
+    const colors = this.chartColors();
+    return {
+      labels: this.visitorSeries().map((point) => point.label),
+      datasets: [
+        {
+          label: 'Visiteurs',
+          data: this.visitorSeries().map((point) => point.value),
+          borderColor: colors.primary,
+          backgroundColor: colors.primary,
+          borderWidth: 2,
+          tension: 0.35,
+          pointRadius: 3,
+          pointHoverRadius: 4,
+          fill: false,
+        },
+      ],
+    };
+  });
+
+  readonly slotChartOptions = signal<ChartOptions<'doughnut'>>({
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    cutout: '62%',
+  });
+
+  readonly visitorChartOptions = signal<ChartOptions<'line'>>({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0,
+        },
+      },
+    },
+  });
+
   ngOnInit(): void {
+    this.initializeChartOptionsFromTheme();
     this.loadDashboardStats();
+  }
+
+  private initializeChartOptionsFromTheme(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const colors: DashboardChartColors = {
+      primary: rootStyles.getPropertyValue('--color-primary').trim() || '#1976D2',
+      textPrimary: rootStyles.getPropertyValue('--color-text-primary').trim() || '#212121',
+      textSecondary: rootStyles.getPropertyValue('--color-text-secondary').trim() || '#616161',
+      border: rootStyles.getPropertyValue('--color-border').trim() || '#E0E0E0',
+      warning: rootStyles.getPropertyValue('--color-warning').trim() || '#FF9800',
+      success: rootStyles.getPropertyValue('--color-success').trim() || '#4CAF50',
+    };
+
+    this.chartColors.set(colors);
+
+    this.slotChartOptions.set({
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: false,
+          labels: {
+            color: colors.textSecondary,
+          },
+        },
+        tooltip: {
+          enabled: true,
+        },
+      },
+      cutout: '62%',
+    });
+
+    this.visitorChartOptions.set({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+          labels: {
+            color: colors.textSecondary,
+          },
+        },
+        tooltip: {
+          enabled: true,
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            color: colors.border,
+          },
+          ticks: {
+            color: colors.textSecondary,
+            autoSkip: true,
+            maxRotation: 0,
+          },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: colors.textSecondary,
+            precision: 0,
+          },
+          grid: {
+            color: colors.border,
+          },
+        },
+      },
+    });
   }
 
   private loadDashboardStats(): void {
     this.dashboardService.getAdminStats(this.periodDays()).subscribe({
       next: (stats) => {
+        this.periodDays.set(stats.visitors.periodDays);
         this.freeSlots.set(stats.slots.free);
         this.occupiedSlots.set(stats.slots.occupied);
 
         this.visitorSeries.set(
           stats.visitors.series.map((item) => ({
-            day: this.formatDay(item.date),
+            label: this.formatDay(item.date, stats.visitors.periodDays),
             value: item.count,
           }))
         );
@@ -474,14 +607,30 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  private formatDay(dateIso: string): string {
+  setPeriodDays(days: number): void {
+    if (days === this.periodDays()) {
+      return;
+    }
+
+    this.periodDays.set(days);
+    this.loadDashboardStats();
+  }
+
+  private formatDay(dateIso: string, periodDays: number): string {
     const date = new Date(dateIso);
     if (Number.isNaN(date.getTime())) {
       return dateIso;
     }
 
-    const dayLabel = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(date);
-    return dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1, 3);
+    if (periodDays <= 7) {
+      const dayLabel = new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(date);
+      return dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1, 3);
+    }
+
+    return new Intl.DateTimeFormat('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+    }).format(date);
   }
 
   readonly totalSlots = computed(() => this.freeSlots() + this.occupiedSlots());
@@ -490,28 +639,6 @@ export class DashboardComponent implements OnInit {
     const total = this.totalSlots();
     if (total === 0) return 0;
     return Math.round((this.occupiedSlots() / total) * 100);
-  });
-
-  readonly freeRate = computed(() => 100 - this.occupancyRate());
-
-  readonly visitorChartPoints = computed(() => {
-    const series = this.visitorSeries();
-    if (series.length <= 1) return '';
-
-    const width = 100;
-    const height = 100;
-    const maxValue = Math.max(...series.map((point) => point.value));
-    const minValue = Math.min(...series.map((point) => point.value));
-    const range = Math.max(1, maxValue - minValue);
-
-    return series
-      .map((point, index) => {
-        const x = (index / (series.length - 1)) * width;
-        const normalizedY = (point.value - minValue) / range;
-        const y = height - normalizedY * height;
-        return `${x},${y}`;
-      })
-      .join(' ');
   });
 
   readonly visitorLatest = computed(() => {
