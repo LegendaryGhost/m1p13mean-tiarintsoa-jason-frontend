@@ -9,10 +9,31 @@
   styleClass="generic-form-dialog"
   [style]="{ width: '540px' }"
 >
+  <!-- ── Step indicator (multi-step only) ──────────────────────────── -->
+  @if (isMultiStep()) {
+    <div class="step-indicator">
+      @for (s of steps(); track $index) {
+        <div class="step-item" [class.active]="$index === currentStep()" [class.done]="$index < currentStep()">
+          <div class="step-bubble">
+            @if ($index < currentStep()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              {{ $index + 1 }}
+            }
+          </div>
+          <span class="step-label">{{ s.label }}</span>
+        </div>
+        @if ($index < steps().length - 1) {
+          <div class="step-connector" [class.done]="$index < currentStep()"></div>
+        }
+      }
+    </div>
+  }
+
   @if (form(); as fg) {
     <form
       [formGroup]="fg"
-      (ngSubmit)="onSave()"
+      (ngSubmit)="isLastStep() ? onSave() : onNext()"
       class="generic-form"
       autocomplete="off"
       novalidate
@@ -42,13 +63,18 @@
       <!-- Declared INSIDE [formGroup] so formControlName directives  -->
       <!-- can resolve ControlContainer at the declaration site.      -->
       <ng-template #fieldTpl let-field>
-        <div class="form-group">
-          <label [for]="'gfd-' + field.key" class="form-label">
-            {{ field.label }}
-            @if (field.required) {
-              <span class="required" aria-hidden="true">*</span>
-            }
-          </label>
+        @if (field.type === 'label') {
+          <p class="form-section-label">{{ field.label }}</p>
+        } @else {
+        <div class="form-group" [class.form-group--checkbox]="field.type === 'checkbox'">
+          @if (field.type !== 'checkbox') {
+            <label [for]="'gfd-' + field.key" class="form-label">
+              {{ field.label }}
+              @if (field.required) {
+                <span class="required" aria-hidden="true">*</span>
+              }
+            </label>
+          }
 
           @switch (field.type) {
 
@@ -189,25 +215,64 @@
             <small class="field-error" role="alert">{{ getFieldError(field.key) }}</small>
           }
         </div>
+        }
       </ng-template>
     </form>
   }
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <p-button
-        label="Annuler"
-        icon="pi pi-times"
-        [outlined]="true"
-        severity="secondary"
-        (onClick)="onCancel()"
-      />
-      <p-button
-        [label]="saveLabel()"
-        [icon]="'pi ' + saveIcon()"
-        [loading]="saving()"
-        (onClick)="onSave()"
-      />
+      @if (isMultiStep()) {
+        <!-- Multi-step footer -->
+        <p-button
+          label="Annuler"
+          icon="pi pi-times"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="onCancel()"
+        />
+        <div class="step-nav-buttons">
+          @if (!isFirstStep()) {
+            <p-button
+              label="Précédent"
+              icon="pi pi-arrow-left"
+              [outlined]="true"
+              severity="secondary"
+              (onClick)="onPrev()"
+            />
+          }
+          @if (!isLastStep()) {
+            <p-button
+              label="Suivant"
+              iconPos="right"
+              icon="pi pi-arrow-right"
+              (onClick)="onNext()"
+            />
+          } @else {
+            <p-button
+              [label]="saveLabel()"
+              [icon]="'pi ' + saveIcon()"
+              [loading]="saving()"
+              (onClick)="onSave()"
+            />
+          }
+        </div>
+      } @else {
+        <!-- Single-step footer (original behaviour) -->
+        <p-button
+          label="Annuler"
+          icon="pi pi-times"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="onCancel()"
+        />
+        <p-button
+          [label]="saveLabel()"
+          [icon]="'pi ' + saveIcon()"
+          [loading]="saving()"
+          (onClick)="onSave()"
+        />
+      }
     </div>
   </ng-template>
 </p-dialog>

@@ -37,9 +37,13 @@
       [saving]="saving()"
       saveLabel="Soumettre la demande"
       saveIcon="pi-send"
+      [steps]="steps()"
+      [currentStep]="visualStepIndex()"
       (visibleChange)="$event ? null : closeDialog()"
       (save)="submitDemande()"
       (cancel)="closeDialog()"
+      (nextStep)="onNextStep()"
+      (prevStep)="onPrevStep()"
     />
   </ng-container>
 </app-page-list-layout>

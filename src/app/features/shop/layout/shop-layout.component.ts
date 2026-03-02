@@ -466,12 +466,27 @@ interface SidebarItem {
 
     @media (max-width: 768px) {
       .main-footer {
-        padding: 0.75rem 1rem;
+        padding: 0.4rem 1rem;
       }
 
       .footer-content {
+        font-size: 0.6875rem;
+        gap: 0.25rem;
+      }
+
+      .footer-heart {
         font-size: 0.75rem;
-        gap: 0.375rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-authors {
+        flex-direction: column;
+        gap: 0.1rem;
+      }
+
+      .footer-separator {
+        display: none;
       }
     }
 
@@ -533,7 +548,8 @@ interface SidebarItem {
       }
 
       .sidebar-header {
-        display: none;
+        display: flex;
+        justify-content: flex-end;
       }
 
       .main-header {
@@ -588,10 +604,16 @@ export class ShopLayoutComponent {
       tooltip: 'Tableau de bord de votre boutique'
     },
     {
+      icon: 'pi-shop',
+      label: 'Mes boutiques',
+      route: '/boutique/mes-boutiques',
+      tooltip: 'Voir et gérer mes boutiques'
+    },
+    {
       icon: 'pi-map-marker',
       label: 'Mes demandes',
       route: '/boutique/mes-demandes',
-      tooltip: 'Mes demandes d\'emplacement'
+      tooltip: 'Mes demandes de location'
     },
     {
       icon: 'pi-box',
@@ -605,12 +627,6 @@ export class ShopLayoutComponent {
       route: '/boutique/promotions',
       tooltip: 'Gérer vos promotions'
     },
-    {
-      icon: 'pi-info-circle',
-      label: 'Ma boutique',
-      route: '/boutique/informations',
-      tooltip: 'Informations de votre boutique'
-    }
   ]);
 
   constructor() {

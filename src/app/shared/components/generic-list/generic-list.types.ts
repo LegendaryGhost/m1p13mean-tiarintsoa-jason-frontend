@@ -23,6 +23,9 @@ export interface ColumnDef<T = any> {
 
   // For 'custom' cell type
   template?: TemplateRef<{ $implicit: T }>;
+
+  // For 'text' cell type: optional value formatter
+  formatter?: (row: T) => string;
 }
 
 export interface RowAction<T = any> {

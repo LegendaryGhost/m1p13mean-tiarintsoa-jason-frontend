@@ -111,21 +111,33 @@ import { Etage } from '../../core/models';
 
     @media (max-width: 768px) {
       .floor-selector {
-        padding: 0.75rem;
-        min-width: 100px;
+        padding: 0.5rem;
+        min-width: 72px;
+        gap: 0.375rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+      }
+
+      .floor-selector-title {
+        font-size: 0.7rem;
+        padding: 0.25rem;
+        margin-bottom: 0.25rem;
+
+        i { font-size: 0.9rem; }
       }
 
       .floor-button {
-        min-height: 50px;
-        padding: 0.5rem;
+        min-height: 40px;
+        padding: 0.375rem 0.25rem;
+        border-radius: 6px;
       }
 
       .floor-level {
-        font-size: 1rem;
+        font-size: 0.9rem;
       }
 
       .floor-name {
-        font-size: 0.625rem;
+        font-size: 0.5625rem;
       }
     }
   `]
@@ -136,7 +148,7 @@ export class FloorSelectorComponent {
   etageSelected = output<string>();
 
   // Sort floors by niveau in descending order (highest floor first)
-  sortedEtages = computed(() => 
+  sortedEtages = computed(() =>
     [...this.etages()].sort((a, b) => b.niveau - a.niveau)
   );
 

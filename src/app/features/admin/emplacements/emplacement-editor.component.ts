@@ -1,5 +1,5 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -22,6 +22,7 @@ import { ToastModule } from 'primeng/toast';
 import { Observable, forkJoin } from 'rxjs';
 import { EtageService } from '../../../core/services/etage.service';
 import { EmplacementService } from '../../../core/services/emplacement.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { EtageBase, EmplacementPopulated, EmplacementCoordonnees } from '../../../core/models';
 import { FloorSelectorComponent } from '../../../interactive-map/floor-selector/floor-selector.component';
 import { GenericFormDialogComponent } from '../../../shared/components/generic-form-dialog/generic-form-dialog.component';
@@ -73,12 +74,13 @@ interface ResizeState {
   styleUrl: './emplacement-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
+export class EmplacementEditorComponent implements OnDestroy {
   @ViewChild('editorCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private platformId = inject(PLATFORM_ID);
   private etageService = inject(EtageService);
   private emplacementService = inject(EmplacementService);
+  private themeService = inject(ThemeService);
   private messageService = inject(MessageService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
@@ -239,18 +241,24 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
         this.allEmplacements();
         if (this.ctx) this.drawMap();
       });
-    }
-  }
 
-  ngAfterViewInit(): void {
-    if (this.isBrowser) {
-      this.canvas = this.canvasRef.nativeElement;
-      this.ctx = this.canvas.getContext('2d');
-      if (this.canvas && this.ctx) {
-        this.canvas.width = 1200;
-        this.canvas.height = 800;
-        this.drawMap();
-      }
+      // Redraw when the theme changes (CSS variables update before next frame)
+      effect(() => {
+        this.themeService.currentTheme();
+        if (this.ctx) {
+          requestAnimationFrame(() => this.drawMap());
+        }
+      });
+
+      afterNextRender(() => {
+        this.canvas = this.canvasRef.nativeElement;
+        this.ctx = this.canvas.getContext('2d');
+        if (this.canvas && this.ctx) {
+          this.canvas.width = 1200;
+          this.canvas.height = 800;
+          this.drawMap();
+        }
+      });
     }
   }
 
@@ -274,7 +282,8 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
     this.selectedId.set(null);
     this.emplacementService.getEmplacementsByEtage(etageId).subscribe({
       next: (emplacements) => {
-        this.serverEmplacements.set(emplacements);
+        // Spread to always produce a new reference so the signal fires even on HTTP 304
+        this.serverEmplacements.set([...emplacements]);
         this.loadingSlots.set(false);
         this.loadFloorPlanImage();
       },
