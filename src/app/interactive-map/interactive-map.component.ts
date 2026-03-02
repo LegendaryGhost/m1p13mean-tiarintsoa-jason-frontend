@@ -5,10 +5,10 @@ import {
   signal,
   computed,
   effect,
-  afterNextRender,
   ViewChild,
   ElementRef,
   OnDestroy,
+  AfterViewInit,
   PLATFORM_ID
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -280,7 +280,7 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
     }
   `]
 })
-export class InteractiveMapComponent implements OnDestroy {
+export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private platformId = inject(PLATFORM_ID);
@@ -341,7 +341,7 @@ export class InteractiveMapComponent implements OnDestroy {
 
     // Only run browser-specific effects in the browser
     if (this.isBrowser) {
-      // Redraw when floor changes
+      // Reload emplacements when floor changes
       effect(() => {
         const etageId = this.selectedEtageId();
         if (etageId) {
@@ -380,14 +380,19 @@ export class InteractiveMapComponent implements OnDestroy {
           requestAnimationFrame(() => this.drawMap());
         }
       });
+    }
+  }
 
-      // Use afterNextRender to initialise the canvas only after the client has
-      // fully taken over from SSR — this avoids hydration-timing issues that
-      // caused the `/` (index) route to render a blank canvas.
-      afterNextRender(() => {
-        this.trackMapVisitIfHomeRoute();
-        this.initializeCanvas();
-      });
+  ngAfterViewInit(): void {
+    if (!this.isBrowser) return;
+    this.trackMapVisitIfHomeRoute();
+    this.initializeCanvas();
+    // If data already arrived before the canvas was ready (e.g. fast 304
+    // cache hit during hydration), trigger a data reload so the draw
+    // effects fire with a valid ctx.
+    const etageId = this.selectedEtageId();
+    if (etageId && this.emplacements().length === 0) {
+      this.loadEmplacements(etageId);
     }
   }
 
