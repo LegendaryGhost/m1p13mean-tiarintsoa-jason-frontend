@@ -1,0 +1,101 @@
+<app-page-list-layout
+  icon="pi-tag"
+  title="Mes promotions"
+  [subtitle]="promotions().length + ' promotion(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadPromotions()">
+
+  <ng-container headerActions>
+    <p-button
+      label="Nouvelle promotion"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </ng-container>
+
+  <!-- Image cell template -->
+  <ng-template #imageTpl let-row>
+    @if (row.image) {
+      <img
+        [src]="getImageSrc(row.image)"
+        [alt]="row.titre"
+        class="promo-thumb"
+      />
+    } @else {
+      <div class="no-image">
+        <i class="pi pi-image"></i>
+      </div>
+    }
+  </ng-template>
+
+  <app-generic-list
+    [data]="promotions()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <p-button
+      emptyAction
+      label="Créer une promotion"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </app-generic-list>
+
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields()"
+      [visible]="dialogVisible()"
+      [title]="isEditing() ? 'Modifier la promotion' : 'Nouvelle promotion'"
+      [saving]="saving()"
+      [saveLabel]="isEditing() ? 'Enregistrer' : 'Créer'"
+      [saveIcon]="isEditing() ? 'pi-check' : 'pi-plus'"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="savePromotion()"
+      (cancel)="closeDialog()"
+    >
+      <!-- Image upload section injected via ng-content -->
+      <div class="image-upload-section">
+        <p class="upload-label">Visuel de la promotion</p>
+
+        @if (imagePreviewUrl()) {
+          <img [src]="imagePreviewUrl()!" alt="Aperçu" class="image-preview" />
+        } @else if (existingImageUrl()) {
+          <img [src]="getImageSrc(existingImageUrl())" alt="Image actuelle" class="image-preview" />
+        } @else {
+          <div class="image-placeholder">
+            <i class="pi pi-image"></i>
+            <span>Aucune image</span>
+          </div>
+        }
+
+        <label class="upload-btn" for="promo-image-input">
+          <i class="pi pi-upload"></i>
+          {{ existingImageUrl() || imagePreviewUrl() ? 'Changer l\'image' : 'Choisir une image' }}
+        </label>
+        <input
+          id="promo-image-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          class="hidden-input"
+          (change)="onImageSelected($event)"
+        />
+        <p class="upload-hint">JPEG, PNG ou WebP — max. 5 Mo</p>
+      </div>
+    </app-generic-form-dialog>
+
+    <app-generic-confirm-dialog
+      [visible]="deleteDialogVisible()"
+      header="Confirmer la suppression"
+      [message]="'Voulez-vous vraiment supprimer la promotion <strong>' + (deletingPromotion()?.titre ?? '') + '</strong> ? Cette action est irréversible.'"
+      confirmLabel="Supprimer"
+      confirmIcon="pi-trash"
+      severity="danger"
+      [loading]="deleting()"
+      (visibleChange)="$event ? null : cancelDelete()"
+      (confirm)="executeDelete()"
+      (cancel)="cancelDelete()"
+    />
+  </ng-container>
+
+</app-page-list-layout>

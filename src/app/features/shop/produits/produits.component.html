@@ -1,0 +1,101 @@
+<app-page-list-layout
+  icon="pi-box"
+  title="Mes produits"
+  [subtitle]="produits().length + ' produit(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadProduits()">
+
+  <ng-container headerActions>
+    <p-button
+      label="Nouveau produit"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </ng-container>
+
+  <!-- Image cell template -->
+  <ng-template #imageTpl let-row>
+    @if (row.image) {
+      <img
+        [src]="getImageSrc(row.image)"
+        [alt]="row.nom"
+        class="product-thumb"
+      />
+    } @else {
+      <div class="no-image">
+        <i class="pi pi-image"></i>
+      </div>
+    }
+  </ng-template>
+
+  <app-generic-list
+    [data]="produits()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <p-button
+      emptyAction
+      label="Créer un produit"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </app-generic-list>
+
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields()"
+      [visible]="dialogVisible()"
+      [title]="isEditing() ? 'Modifier le produit' : 'Nouveau produit'"
+      [saving]="saving()"
+      [saveLabel]="isEditing() ? 'Enregistrer' : 'Créer'"
+      [saveIcon]="isEditing() ? 'pi-check' : 'pi-plus'"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="saveProduit()"
+      (cancel)="closeDialog()"
+    >
+      <!-- Image upload section injected via ng-content -->
+      <div class="image-upload-section">
+        <p class="upload-label">Image du produit</p>
+
+        @if (imagePreviewUrl()) {
+          <img [src]="imagePreviewUrl()!" alt="Aperçu" class="image-preview" />
+        } @else if (existingImageUrl()) {
+          <img [src]="getImageSrc(existingImageUrl())" alt="Image actuelle" class="image-preview" />
+        } @else {
+          <div class="image-placeholder">
+            <i class="pi pi-image"></i>
+            <span>Aucune image</span>
+          </div>
+        }
+
+        <label class="upload-btn" for="produit-image-input">
+          <i class="pi pi-upload"></i>
+          {{ existingImageUrl() || imagePreviewUrl() ? 'Changer l\'image' : 'Choisir une image' }}
+        </label>
+        <input
+          id="produit-image-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          class="hidden-input"
+          (change)="onImageSelected($event)"
+        />
+        <p class="upload-hint">JPEG, PNG ou WebP — max. 5 Mo</p>
+      </div>
+    </app-generic-form-dialog>
+
+    <app-generic-confirm-dialog
+      [visible]="deleteDialogVisible()"
+      header="Confirmer la suppression"
+      [message]="'Voulez-vous vraiment supprimer le produit <strong>' + (deletingProduit()?.nom ?? '') + '</strong> ? Cette action est irréversible.'"
+      confirmLabel="Supprimer"
+      confirmIcon="pi-trash"
+      severity="danger"
+      [loading]="deleting()"
+      (visibleChange)="$event ? null : cancelDelete()"
+      (confirm)="executeDelete()"
+      (cancel)="cancelDelete()"
+    />
+  </ng-container>
+
+</app-page-list-layout>
