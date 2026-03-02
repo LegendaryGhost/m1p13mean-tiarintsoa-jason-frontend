@@ -324,11 +324,28 @@
     flex-direction: column;
     overflow: auto;
     padding: 0.75rem;
+    position: relative;
   }
 
   .canvas-area {
     height: 60vh;
     flex: unset;
+    overflow: auto;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .editor-canvas {
+    max-width: none;
+    max-height: none;
+  }
+
+  // Floor selector floats over the canvas in the top-right
+  app-floor-selector {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 10;
   }
 
   .side-panels {
@@ -336,6 +353,8 @@
     flex-direction: row;
     flex-wrap: wrap;
     overflow: visible;
+    // Leave room so the absolute floor selector doesn't overlap tabs
+    padding-right: 0;
   }
 
   .selection-panel,

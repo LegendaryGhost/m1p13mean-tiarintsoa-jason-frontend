@@ -10,6 +10,16 @@ import { CrudService } from './crud.service';
 export class PromotionService extends CrudService<PromotionBase, PromotionPopulated> {
   protected override endpoint = 'promotions';
 
+  /** Promotions actuellement actives ou à venir (public). */
+  getActivePromotions(boutiqueId?: string): Observable<PromotionBase[]> {
+    const url = boutiqueId
+      ? `${this.endpoint}/actives?boutiqueId=${boutiqueId}`
+      : `${this.endpoint}/actives`;
+    return this.apiService
+      .get<ApiResponse<PromotionBase[]>>(url)
+      .pipe(map((r) => r.data));
+  }
+
   /** Promotions des boutiques appartenant à l'utilisateur connecté. */
   getMesPromotions(): Observable<PromotionPopulated[]> {
     return this.apiService

@@ -465,12 +465,27 @@ interface SidebarItem {
 
     @media (max-width: 768px) {
       .main-footer {
-        padding: 0.75rem 1rem;
+        padding: 0.4rem 1rem;
       }
 
       .footer-content {
+        font-size: 0.6875rem;
+        gap: 0.25rem;
+      }
+
+      .footer-heart {
         font-size: 0.75rem;
-        gap: 0.375rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-authors {
+        flex-direction: column;
+        gap: 0.1rem;
+      }
+
+      .footer-separator {
+        display: none;
       }
     }
 
@@ -532,7 +547,8 @@ interface SidebarItem {
       }
 
       .sidebar-header {
-        display: none;
+        display: flex;
+        justify-content: flex-end;
       }
 
       .main-header {

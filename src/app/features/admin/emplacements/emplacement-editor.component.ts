@@ -1,5 +1,5 @@
 import {
-  AfterViewInit,
+  afterNextRender,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -74,7 +74,7 @@ interface ResizeState {
   styleUrl: './emplacement-editor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
+export class EmplacementEditorComponent implements OnDestroy {
   @ViewChild('editorCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private platformId = inject(PLATFORM_ID);
@@ -249,18 +249,16 @@ export class EmplacementEditorComponent implements AfterViewInit, OnDestroy {
           requestAnimationFrame(() => this.drawMap());
         }
       });
-    }
-  }
 
-  ngAfterViewInit(): void {
-    if (this.isBrowser) {
-      this.canvas = this.canvasRef.nativeElement;
-      this.ctx = this.canvas.getContext('2d');
-      if (this.canvas && this.ctx) {
-        this.canvas.width = 1200;
-        this.canvas.height = 800;
-        this.drawMap();
-      }
+      afterNextRender(() => {
+        this.canvas = this.canvasRef.nativeElement;
+        this.ctx = this.canvas.getContext('2d');
+        if (this.canvas && this.ctx) {
+          this.canvas.width = 1200;
+          this.canvas.height = 800;
+          this.drawMap();
+        }
+      });
     }
   }
 
