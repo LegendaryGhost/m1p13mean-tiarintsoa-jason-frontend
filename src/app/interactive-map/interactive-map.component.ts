@@ -20,7 +20,7 @@ import { LocationService } from '../core/services/location.service';
 import { VisitTrackingService } from '../core/services/visit-tracking.service';
 import { ThemeService } from '../core/services/theme.service';
 import { PromotionService } from '../core/services/promotion.service';
-import { Etage, Emplacement, EmplacementBase, BoutiquePopulated, LocationEmplacementPopulated, PromotionBase } from '../core/models';
+import { Etage, Emplacement, EmplacementBase, BoutiquePopulated, LocationEmplacementPopulated, Promotion, isPromotionPopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
 
@@ -302,7 +302,7 @@ export class InteractiveMapComponent implements OnDestroy {
   loadingSlots = signal(false);
   loadingLocations = signal(false);
   activeLocations = signal<LocationEmplacementPopulated[]>([]);
-  activePromotions = signal<PromotionBase[]>([]);
+  activePromotions = signal<Promotion[]>([]);
   legendOpen = signal<boolean>(true);
 
   // Computed
@@ -325,7 +325,7 @@ export class InteractiveMapComponent implements OnDestroy {
     return new Set(
       this.activePromotions()
         .filter(p => new Date(p.dateFin) >= now)
-        .map(p => p.boutiqueId)
+        .map(p => isPromotionPopulated(p) ? p.boutiqueId._id : p.boutiqueId)
     );
   });
 
