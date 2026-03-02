@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
-import { CurrencyPipe, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ChartModule } from 'primeng/chart';
 import { ChartData, ChartOptions } from 'chart.js';
@@ -27,7 +27,7 @@ interface DashboardChartColors {
 
 @Component({
   selector: 'app-shop-dashboard',
-  imports: [CardModule, ChartModule, CurrencyPipe],
+  imports: [CardModule, ChartModule],
   template: `
     <div class="dashboard-container">
       <div class="dashboard-header">
@@ -88,12 +88,11 @@ interface DashboardChartColors {
 
           <p-card>
             <div class="section-header">
-              <h2>Produits en promotions</h2>
-              <p>Produits mis en avant</p>
+              <h2>Produits mis en avant</h2>
             </div>
 
             @if (promotedProducts().length === 0) {
-              <p class="empty-text">Aucun produit en promotion actuellement.</p>
+              <p class="empty-text">Aucun produit mis en avant.</p>
             } @else {
               <ul class="promoted-list">
                 @for (product of promotedProducts(); track product.id) {
@@ -113,7 +112,7 @@ interface DashboardChartColors {
                       </div>
                     </div>
 
-                    <span class="product-price">{{ product.price | currency:'MGA':'symbol':'1.0-0':'fr-FR' }}</span>
+                    <span class="product-price">{{ formatPrice(product.price) }}</span>
                   </li>
                 }
               </ul>
@@ -550,4 +549,11 @@ export class ShopDashboardComponent implements OnInit {
 
     return `Évolution sur ${this.periodDays()} jours`;
   });
+
+  formatPrice(price: number): string {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'MGA',
+    }).format(price);
+  }
 }
