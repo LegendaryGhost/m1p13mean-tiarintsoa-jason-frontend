@@ -1,0 +1,233 @@
+<p-toast />
+
+<div class="editor-page">
+
+  <!-- ── Page Header ──────────────────────────────────────── -->
+  <div class="editor-header">
+    <div class="header-title">
+      <i class="pi pi-map-marker"></i>
+      <div>
+        <h2>Éditeur d'emplacements</h2>
+        <p class="header-subtitle">
+          {{ allEmplacements().length }} emplacement(s)
+          @if (hasPendingChanges()) {
+            <span class="pending-badge">
+              <i class="pi pi-circle-fill"></i> Modifications non sauvegardées
+            </span>
+          }
+        </p>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="editor-toolbar">
+      <!-- Mode toggle -->
+      <div class="mode-toggle" role="group" aria-label="Mode d'édition">
+        <button
+          class="mode-btn"
+          [class.active]="editMode() === 'move'"
+          (click)="setMode('move')"
+          pTooltip="Déplacer les emplacements"
+          tooltipPosition="bottom">
+          <i class="pi pi-arrows-alt"></i>
+          <span>Déplacer</span>
+        </button>
+        <button
+          class="mode-btn"
+          [class.active]="editMode() === 'draw'"
+          (click)="setMode('draw')"
+          pTooltip="Dessiner un nouvel emplacement"
+          tooltipPosition="bottom">
+          <i class="pi pi-pencil"></i>
+          <span>Dessiner</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Save / Cancel -->
+      <p-button
+        label="Annuler tout"
+        icon="pi pi-undo"
+        severity="secondary"
+        [outlined]="true"
+        [disabled]="!hasPendingChanges()"
+        (onClick)="cancelAll()"
+        pTooltip="Annuler toutes les modifications en cours"
+        tooltipPosition="bottom"
+      />
+      <p-button
+        label="Enregistrer"
+        icon="pi pi-check"
+        severity="success"
+        [loading]="saving()"
+        [disabled]="!hasPendingChanges()"
+        (onClick)="saveAll()"
+      />
+    </div>
+  </div>
+
+  <!-- ── Main Editor Area ──────────────────────────────────── -->
+  <div class="editor-body">
+
+    <!-- Canvas area -->
+    <div class="canvas-area">
+      <canvas
+        #editorCanvas
+        class="editor-canvas"
+        [class.mode-draw]="editMode() === 'draw'"
+        [class.mode-move]="editMode() === 'move'"
+        (mousedown)="onCanvasMouseDown($event)"
+        (mousemove)="onCanvasMouseMove($event)"
+        (mouseup)="onCanvasMouseUp($event)"
+        (mouseleave)="onCanvasMouseLeave()"
+        aria-label="Éditeur de plan d'étage">
+      </canvas>
+
+      @if (loadingSlots()) {
+        <div class="canvas-loading" role="status">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Chargement…</span>
+        </div>
+      }
+
+      <!-- Legend -->
+      <div class="map-legend">
+        <span class="legend-item"><span class="dot existing"></span>Existant</span>
+        <span class="legend-item"><span class="dot pending-move"></span>Déplacé</span>
+        <span class="legend-item"><span class="dot new-slot"></span>Nouveau</span>
+        <span class="legend-item"><span class="dot deleted"></span>Supprimé</span>
+        <span class="legend-item"><span class="dot selected"></span>Sélectionné</span>
+      </div>
+    </div>
+
+    <!-- Right panels -->
+    <div class="side-panels">
+
+      <!-- Floor selector -->
+      <app-floor-selector
+        [etages]="etages()"
+        [selectedEtageId]="selectedEtageId()"
+        (etageSelected)="onEtageSelected($event)">
+      </app-floor-selector>
+
+      <!-- Selection detail panel -->
+      @if (selectedEmplacement(); as sel) {
+        <div class="selection-panel">
+          <h3 class="selection-title">
+            <i class="pi pi-map-marker"></i>
+            Emplacement sélectionné
+          </h3>
+
+          <div class="selection-info">
+            <div class="info-row">
+              <span class="info-label">Numéro</span>
+              <span class="info-value">{{ sel.numero }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Position</span>
+              <span class="info-value">X: {{ sel.coordonnees.x | number:'1.0-0' }}, Y: {{ sel.coordonnees.y | number:'1.0-0' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Taille</span>
+              <span class="info-value">{{ sel.coordonnees.width | number:'1.0-0' }} × {{ sel.coordonnees.height | number:'1.0-0' }}</span>
+            </div>
+            @if (sel.isNew) {
+              <div class="info-badge new">Nouveau (non sauvegardé)</div>
+            }
+            @if (pendingMoves().has(sel.id)) {
+              <div class="info-badge moved">Position modifiée</div>
+            }
+            @if (pendingDeletes().has(sel.id)) {
+              <div class="info-badge deleted">Marqué pour suppression</div>
+            }
+          </div>
+
+          <div class="selection-actions">
+            <p-button
+              label="Modifier"
+              icon="pi pi-pencil"
+              [outlined]="true"
+              size="small"
+              [disabled]="pendingDeletes().has(sel.id)"
+              (onClick)="openEditDialog()"
+            />
+            @if (pendingDeletes().has(sel.id)) {
+              <p-button
+                label="Annuler la suppression"
+                icon="pi pi-undo"
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="undoDelete(sel.id)"
+              />
+            } @else {
+              <p-button
+                label="Supprimer"
+                icon="pi pi-trash"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (onClick)="openDeleteDialog()"
+              />
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="selection-placeholder">
+          <i class="pi pi-hand-pointer"></i>
+          <p>
+            @if (editMode() === 'draw') {
+              Tracez un rectangle sur le plan pour créer un emplacement
+            } @else {
+              Cliquez sur un emplacement pour le sélectionner
+            }
+          </p>
+        </div>
+      }
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Dialogs ──────────────────────────────────────────────── -->
+
+<!-- Create new slot (after drawing rectangle) -->
+<app-generic-form-dialog
+  [form]="createForm"
+  [fields]="createFormFields"
+  [visible]="createDialogVisible()"
+  title="Nouvel emplacement"
+  saveLabel="Créer"
+  saveIcon="pi-plus"
+  (visibleChange)="$event ? null : closeCreateDialog()"
+  (save)="confirmCreate()"
+  (cancel)="closeCreateDialog()"
+/>
+
+<!-- Edit existing / pending slot -->
+<app-generic-form-dialog
+  [form]="editForm"
+  [fields]="editFormFields"
+  [visible]="editDialogVisible()"
+  title="Modifier l'emplacement"
+  saveLabel="Enregistrer"
+  saveIcon="pi-check"
+  (visibleChange)="$event ? null : closeEditDialog()"
+  (save)="confirmEdit()"
+  (cancel)="closeEditDialog()"
+/>
+
+<!-- Confirm delete -->
+<app-generic-confirm-dialog
+  [visible]="deleteDialogVisible()"
+  header="Supprimer l'emplacement"
+  [message]="'Voulez-vous vraiment supprimer l\'emplacement <strong>' + deletingLabel() + '</strong> ? Il sera supprimé à la sauvegarde.'"
+  confirmLabel="Supprimer"
+  confirmIcon="pi-trash"
+  severity="danger"
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteDialog()"
+  (visibleChange)="$event ? null : closeDeleteDialog()"
+/>

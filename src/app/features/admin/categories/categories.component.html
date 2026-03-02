@@ -1,82 +1,69 @@
-<div class="categories-container">
-  <p-toast />
+<app-page-list-layout
+  icon="pi-list"
+  title="Gestion des catégories"
+  [subtitle]="categories().length + ' catégorie(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadCategories()">
 
-  <p-card>
-    <ng-template pTemplate="header">
-      <div class="card-header">
-        <div class="card-header-title">
-          <i class="pi pi-list header-icon" aria-hidden="true"></i>
-          <div>
-            <h1>Gestion des catégories</h1>
-            <p class="header-subtitle">{{ categories().length }} catégorie(s) au total</p>
-          </div>
-        </div>
-        <div class="header-actions">
-          <p-button
-            label="Actualiser"
-            icon="pi pi-refresh"
-            [loading]="loading()"
-            (onClick)="loadCategories()"
-            [outlined]="true"
-            severity="secondary"
-          />
-          <p-button
-            label="Nouvelle catégorie"
-            icon="pi pi-plus"
-            (onClick)="openCreateDialog()"
-          />
-        </div>
-      </div>
-    </ng-template>
-
-    <app-generic-list
-      [data]="categories()"
-      [loading]="loading()"
-      [config]="listConfig"
-    >
-      <p-button
-        emptyAction
-        label="Créer une catégorie"
-        icon="pi pi-plus"
-        (onClick)="openCreateDialog()"
-      />
-    </app-generic-list>
-  </p-card>
-</div>
-
-<app-generic-form-dialog
-  [form]="form"
-  [fields]="formFields"
-  [visible]="dialogVisible()"
-  [title]="isEditing() ? 'Modifier la catégorie' : 'Nouvelle catégorie'"
-  [saving]="saving()"
-  [saveLabel]="isEditing() ? 'Enregistrer' : 'Créer'"
-  [saveIcon]="isEditing() ? 'pi-check' : 'pi-plus'"
-  (visibleChange)="$event ? null : closeDialog()"
-  (save)="saveCategorie()"
-  (cancel)="closeDialog()"
->
-  <!-- Category preview injected into the form via ng-content -->
-  <div class="preview-section">
-    <p class="preview-label">Aperçu</p>
-    <p-tag
-      [value]="form.get('nom')?.value || 'Nom de la catégorie'"
-      [icon]="getIconClass(form.get('icon')?.value)"
-      [style]="{ 'background-color': form.get('couleur')?.value || '#1976D2', color: 'white', 'font-size': '0.9rem' }"
+  <!-- Extra header actions -->
+  <ng-container headerActions>
+    <p-button
+      label="Nouvelle catégorie"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
     />
-  </div>
-</app-generic-form-dialog>
+  </ng-container>
 
-<app-generic-confirm-dialog
-  [visible]="deleteDialogVisible()"
-  header="Confirmer la suppression"
-  [message]="'Voulez-vous vraiment supprimer la catégorie <strong>' + (deletingCategorie()?.nom ?? '') + '</strong> ? Cette action est irréversible.'"
-  confirmLabel="Supprimer"
-  confirmIcon="pi-trash"
-  severity="danger"
-  [loading]="deleting()"
-  (visibleChange)="$event ? null : cancelDelete()"
-  (confirm)="executeDelete()"
-  (cancel)="cancelDelete()"
-/>
+  <app-generic-list
+    [data]="categories()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <p-button
+      emptyAction
+      label="Créer une catégorie"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </app-generic-list>
+
+  <!-- Dialogs -->
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields"
+      [visible]="dialogVisible()"
+      [title]="isEditing() ? 'Modifier la catégorie' : 'Nouvelle catégorie'"
+      [saving]="saving()"
+      [saveLabel]="isEditing() ? 'Enregistrer' : 'Créer'"
+      [saveIcon]="isEditing() ? 'pi-check' : 'pi-plus'"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="saveCategorie()"
+      (cancel)="closeDialog()"
+    >
+      <!-- Category preview injected into the form via ng-content -->
+      <div class="preview-section">
+        <p class="preview-label">Aperçu</p>
+        <p-tag
+          [value]="form.get('nom')?.value || 'Nom de la catégorie'"
+          [icon]="getIconClass(form.get('icon')?.value)"
+          [style]="{ 'background-color': form.get('couleur')?.value || '#1976D2', color: 'white', 'font-size': '0.9rem' }"
+        />
+      </div>
+    </app-generic-form-dialog>
+
+    <app-generic-confirm-dialog
+      [visible]="deleteDialogVisible()"
+      header="Confirmer la suppression"
+      [message]="'Voulez-vous vraiment supprimer la catégorie <strong>' + (deletingCategorie()?.nom ?? '') + '</strong> ? Cette action est irréversible.'"
+      confirmLabel="Supprimer"
+      confirmIcon="pi-trash"
+      severity="danger"
+      [loading]="deleting()"
+      (visibleChange)="$event ? null : cancelDelete()"
+      (confirm)="executeDelete()"
+      (cancel)="cancelDelete()"
+    />
+  </ng-container>
+</app-page-list-layout>
 

@@ -1,0 +1,46 @@
+<app-page-list-layout
+  icon="pi-shop"
+  title="Mes boutiques"
+  [subtitle]="boutiques().length + ' boutique(s) enregistrée(s)'"
+  [loading]="loading()"
+  (refresh)="loadBoutiques()">
+
+  <!-- Extra header actions — creation disabled; editing is done via the row action -->
+  <!-- <ng-container headerActions>
+    <p-button
+      label="Ajouter une boutique"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </ng-container> -->
+
+  <app-generic-list
+    [data]="boutiques()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <!-- Empty-state action — creation disabled -->
+    <!-- <p-button
+      emptyAction
+      label="Ajouter une boutique"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    /> -->
+  </app-generic-list>
+
+  <!-- Dialogs -->
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields()"
+      [visible]="dialogVisible()"
+      [title]="isEditing() ? 'Modifier la boutique' : 'Nouvelle boutique'"
+      [saving]="saving()"
+      [saveLabel]="isEditing() ? 'Enregistrer les modifications' : 'Créer la boutique'"
+      [saveIcon]="isEditing() ? 'pi-check' : 'pi-shop'"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="submitBoutique()"
+      (cancel)="closeDialog()"
+    />
+  </ng-container>
+</app-page-list-layout>

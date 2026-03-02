@@ -1,0 +1,13 @@
+<app-page-list-layout
+  icon="pi-shop"
+  title="Boutiques"
+  [subtitle]="boutiques().length + ' boutique(s) enregistrée(s)'"
+  [loading]="loading()"
+  (refresh)="loadBoutiques()">
+
+  <app-generic-list
+    [data]="boutiques()"
+    [loading]="loading()"
+    [config]="listConfig"
+  />
+</app-page-list-layout>

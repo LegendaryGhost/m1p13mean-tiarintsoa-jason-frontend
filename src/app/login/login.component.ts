@@ -217,9 +217,9 @@ export class LoginComponent {
   private router = inject(Router);
 
   // Component State using Signals
-  email = signal('rihantiana@gmail.com');
-  password = signal('rihantiana');
-  passwordValue = 'rihantiana';
+  email = signal('lalaina.rasoa@mail.mg');
+  password = signal('Boutique1234');
+  passwordValue = 'Boutique1234';
   isLoading = signal(false);
   errorMessage = signal('');
 

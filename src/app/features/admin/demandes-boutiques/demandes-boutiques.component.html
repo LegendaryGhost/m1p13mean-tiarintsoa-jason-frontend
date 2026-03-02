@@ -1,0 +1,46 @@
+<app-page-list-layout
+  icon="pi-map-marker"
+  title="Demandes de location"
+  [subtitle]="demandes().length + ' demande(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadDemandes()">
+
+  <app-generic-list
+    [data]="demandes()"
+    [loading]="loading()"
+    [config]="listConfig"
+  />
+
+  <!-- Dialogs -->
+  <ng-container extraContent>
+    <!-- Accept confirmation dialog -->
+    <app-generic-confirm-dialog
+      [visible]="acceptDialogVisible()"
+      header="Accepter la demande"
+      [message]="acceptMessage"
+      icon="pi-check-circle"
+      severity="success"
+      confirmLabel="Accepter"
+      confirmIcon="pi-check"
+      cancelLabel="Annuler"
+      [loading]="accepting()"
+      (visibleChange)="$event ? null : cancelAccept()"
+      (confirm)="executeAccept()"
+      (cancel)="cancelAccept()"
+    />
+
+    <!-- Reject dialog with motif form -->
+    <app-generic-form-dialog
+      [form]="rejectForm"
+      [fields]="rejectFields"
+      [visible]="rejectDialogVisible()"
+      title="Refuser la demande"
+      [saving]="rejecting()"
+      saveLabel="Confirmer le refus"
+      saveIcon="pi-times"
+      (visibleChange)="$event ? null : cancelReject()"
+      (save)="executeReject()"
+      (cancel)="cancelReject()"
+    />
+  </ng-container>
+</app-page-list-layout>

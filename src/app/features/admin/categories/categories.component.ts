@@ -10,10 +10,9 @@ import {
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { PageListLayoutComponent } from '../../../shared/components/page-list-layout/page-list-layout.component';
 
 import { CategorieBase } from '../../../core/models';
 import { CategorieService } from '../../../core/services/categorie.service';
@@ -28,10 +27,9 @@ import { FieldDef } from '../../../shared/components/generic-form-dialog/generic
   imports: [
     ReactiveFormsModule,
     ButtonModule,
-    CardModule,
     TagModule,
-    ToastModule,
     GenericListComponent,
+    PageListLayoutComponent,
     GenericFormDialogComponent,
     GenericConfirmDialogComponent,
   ],

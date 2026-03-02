@@ -85,7 +85,7 @@ export class AuthService {
       localStorage.removeItem('mall_user');
     }
     this.currentUser.set(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   private getUserFromStorage(): User | null {

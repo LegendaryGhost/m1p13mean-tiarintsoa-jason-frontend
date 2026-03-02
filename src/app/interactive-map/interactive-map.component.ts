@@ -5,18 +5,22 @@ import {
   signal,
   computed,
   effect,
+  afterNextRender,
   ViewChild,
   ElementRef,
-  AfterViewInit,
   OnDestroy,
   PLATFORM_ID
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { EtageService } from '../core/services/etage.service';
 import { EmplacementService } from '../core/services/emplacement.service';
-import { BoutiqueService } from '../core/services/boutique.service';
-import { Etage, Emplacement, Boutique, BoutiquePopulated } from '../core/models';
+import { LocationService } from '../core/services/location.service';
+import { VisitTrackingService } from '../core/services/visit-tracking.service';
+import { ThemeService } from '../core/services/theme.service';
+import { PromotionService } from '../core/services/promotion.service';
+import { Etage, Emplacement, EmplacementBase, BoutiquePopulated, LocationEmplacementPopulated, Promotion, isPromotionPopulated } from '../core/models';
 import { FloorSelectorComponent } from './floor-selector/floor-selector.component';
 import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.component';
 
@@ -36,18 +40,34 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
             [attr.aria-label]="'Interactive mall map for ' + currentEtage()?.nom">
           </canvas>
 
-          <div class="map-legend">
-            <h3 class="legend-title">Légende</h3>
-            <div class="legend-items">
-              <div class="legend-item">
-                <div class="legend-color occupied"></div>
-                <span>Boutique Occupée</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color available"></div>
-                <span>Emplacement Disponible</span>
-              </div>
+          @if (loadingSlots() || loadingLocations()) {
+            <div class="map-loading-overlay" role="status" aria-live="polite">
+              <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+              <span>{{ loadingSlots() ? 'Chargement des emplacements…' : 'Chargement des boutiques…' }}</span>
             </div>
+          }
+
+          <div class="map-legend" [class.legend-collapsed]="!legendOpen()">
+            <button class="legend-toggle" (click)="toggleLegend()" [attr.aria-expanded]="legendOpen()" aria-label="Afficher/masquer la légende">
+              <h3 class="legend-title">Légende</h3>
+              <i class="pi legend-toggle-icon" [class.pi-chevron-up]="legendOpen()" [class.pi-chevron-down]="!legendOpen()"></i>
+            </button>
+            @if (legendOpen()) {
+              <div class="legend-items">
+                <div class="legend-item">
+                  <div class="legend-color occupied"></div>
+                  <span>Boutique Occupée</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color available"></div>
+                  <span>Emplacement Disponible</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color promotion">★</div>
+                  <span>Promotion en cours</span>
+                </div>
+              </div>
+            }
           </div>
         </div>
 
@@ -99,6 +119,28 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
       cursor: default;
+      display: block;
+    }
+
+    .map-loading-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: color-mix(in srgb, var(--color-background-primary) 80%, transparent);
+      border-radius: 8px;
+      backdrop-filter: blur(2px);
+      color: var(--color-text-primary);
+      font-size: 0.9375rem;
+      pointer-events: none;
+
+      i {
+        font-size: 2rem;
+        color: var(--color-primary);
+      }
     }
 
     .map-legend {
@@ -109,6 +151,24 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       padding: 1rem 1.25rem;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      min-width: 160px;
+    }
+
+    .legend-toggle {
+      display: none;
+      width: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .legend-toggle-icon {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
     }
 
     .legend-title {
@@ -139,6 +199,10 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
       height: 20px;
       border-radius: 4px;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
 
       &.occupied {
         background-color: var(--color-primary);
@@ -148,33 +212,85 @@ import { ShopDetailModalComponent } from './shop-detail-modal/shop-detail-modal.
         background-color: transparent;
         border: 2px dashed var(--color-text-disabled);
       }
+
+      &.promotion {
+        background-color: #f59e0b;
+        color: white;
+        font-size: 0.75rem;
+        line-height: 1;
+      }
     }
 
     @media (max-width: 768px) {
       .map-container {
-        flex-direction: column;
+        position: relative;
+        flex-direction: row;
         padding: 1rem;
+        height: auto;
+        overflow: visible;
+        align-items: flex-start;
+      }
+
+      .canvas-wrapper {
+        flex: 1;
+        height: 60vh;
+        min-height: 340px;
+        overflow: auto;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .map-canvas {
+        max-width: none;
+        max-height: none;
+      }
+
+      .floor-sidebar {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        z-index: 10;
+        align-items: flex-start;
       }
 
       .map-legend {
-        bottom: 1rem;
-        left: 1rem;
-        padding: 0.75rem 1rem;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        min-width: 0;
+      }
+
+      .legend-toggle {
+        display: flex;
+      }
+
+      .legend-title {
+        margin: 0;
+        font-size: 0.8125rem;
+      }
+
+      .legend-collapsed .legend-title {
+        margin: 0;
       }
 
       .legend-items {
         gap: 0.5rem;
+        margin-top: 0.5rem;
       }
     }
   `]
 })
-export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
+export class InteractiveMapComponent implements OnDestroy {
   @ViewChild('mapCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private platformId = inject(PLATFORM_ID);
   private etageService = inject(EtageService);
   private emplacementService = inject(EmplacementService);
-  private boutiqueService = inject(BoutiqueService);
+  private locationService = inject(LocationService);
+  private promotionService = inject(PromotionService);
+  private visitTrackingService = inject(VisitTrackingService);
+  private themeService = inject(ThemeService);
+  private router = inject(Router);
   private isBrowser = isPlatformBrowser(this.platformId);
 
   // Signals
@@ -183,11 +299,35 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   emplacements = signal<Emplacement[]>([]);
   selectedBoutique = signal<BoutiquePopulated | null>(null);
   showShopModal = signal<boolean>(false);
+  loadingSlots = signal(false);
+  loadingLocations = signal(false);
+  activeLocations = signal<LocationEmplacementPopulated[]>([]);
+  activePromotions = signal<Promotion[]>([]);
+  legendOpen = signal<boolean>(true);
 
   // Computed
   currentEtage = computed<Etage | undefined>(() =>
     this.etages().find(e => e._id === this.selectedEtageId())
   );
+
+  readonly activeLocationMap = computed(() => {
+    const map = new Map<string, LocationEmplacementPopulated>();
+    this.activeLocations().forEach(loc => {
+      const id = typeof loc.emplacementId === 'string' ? loc.emplacementId : loc.emplacementId._id;
+      map.set(id, loc);
+    });
+    return map;
+  });
+
+  /** Set of boutique IDs that have active or upcoming promotions. */
+  readonly promotionBoutiqueIds = computed(() => {
+    const now = new Date();
+    return new Set(
+      this.activePromotions()
+        .filter(p => new Date(p.dateFin) >= now)
+        .map(p => isPromotionPopulated(p) ? p.boutiqueId._id : p.boutiqueId)
+    );
+  });
 
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
@@ -197,6 +337,7 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   constructor() {
     // Load initial data
     this.loadData();
+    this.loadActivePromotions();
 
     // Only run browser-specific effects in the browser
     if (this.isBrowser) {
@@ -215,17 +356,55 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
           this.drawMap();
         }
       });
-    }
-  }
 
-  ngAfterViewInit(): void {
-    if (this.isBrowser) {
-      this.initializeCanvas();
+      // Redraw when active locations finish loading
+      effect(() => {
+        this.activeLocations();
+        if (this.emplacements().length > 0 && this.ctx) {
+          this.drawMap();
+        }
+      });
+
+      // Redraw when promotions change
+      effect(() => {
+        this.promotionBoutiqueIds();
+        if (this.emplacements().length > 0 && this.ctx) {
+          requestAnimationFrame(() => this.drawMap());
+        }
+      });
+
+      // Redraw when the theme changes (CSS variables update before next frame)
+      effect(() => {
+        this.themeService.currentTheme();
+        if (this.ctx) {
+          requestAnimationFrame(() => this.drawMap());
+        }
+      });
+
+      // Use afterNextRender to initialise the canvas only after the client has
+      // fully taken over from SSR — this avoids hydration-timing issues that
+      // caused the `/` (index) route to render a blank canvas.
+      afterNextRender(() => {
+        this.trackMapVisitIfHomeRoute();
+        this.initializeCanvas();
+      });
     }
   }
 
   ngOnDestroy(): void {
     // Cleanup
+  }
+
+  private trackMapVisitIfHomeRoute(): void {
+    const url = this.router.url;
+    if (url !== '/' && url !== '/plan') {
+      return;
+    }
+
+    this.visitTrackingService.trackMapHomeVisit().subscribe({
+      error: () => {
+      },
+    });
   }
 
   /**
@@ -248,11 +427,41 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
   }
 
   private loadEmplacements(etageId: string): void {
-    this.emplacementService.getEmplacementsByEtage(etageId).subscribe(emplacements => {
-      this.emplacements.set(emplacements);
-      if (this.isBrowser) {
-        this.loadFloorPlanImage();
+    this.loadingSlots.set(true);
+    this.emplacementService.getEmplacementsByEtage(etageId).subscribe({
+      next: (emplacements) => {
+        // Spread to always produce a new reference so the signal fires even on HTTP 304
+        this.emplacements.set([...emplacements]);
+        this.loadingSlots.set(false);
+        if (this.isBrowser) {
+          this.loadFloorPlanImage();
+        }
+        this.loadActiveLocations(etageId);
+      },
+      error: () => {
+        this.loadingSlots.set(false);
       }
+    });
+  }
+
+  private loadActiveLocations(etageId: string): void {
+    this.loadingLocations.set(true);
+    this.locationService.getActiveLocations(etageId).subscribe({
+      next: (locations) => {
+        // Spread to always produce a new reference so the signal fires even on HTTP 304
+        this.activeLocations.set([...locations]);
+        this.loadingLocations.set(false);
+      },
+      error: () => {
+        this.loadingLocations.set(false);
+      }
+    });
+  }
+
+  private loadActivePromotions(): void {
+    this.promotionService.getActivePromotions().subscribe({
+      next: (promotions) => this.activePromotions.set([...promotions]),
+      error: () => {},
     });
   }
 
@@ -308,19 +517,30 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     // Draw emplacements
     const emplacements = this.emplacements();
+    const locationMap = this.activeLocationMap();
+    const promoIds = this.promotionBoutiqueIds();
     emplacements.forEach(emp => {
-      this.drawEmplacement(emp);
+      this.drawEmplacement(emp as EmplacementBase, locationMap.get(emp._id), promoIds);
     });
   }
 
-  private drawEmplacement(emplacement: Emplacement): void {
+  private drawEmplacement(
+    emplacement: EmplacementBase,
+    location: LocationEmplacementPopulated | undefined,
+    promoIds: Set<string>,
+  ): void {
     if (!this.ctx) return;
 
     const ctx = this.ctx;
     const coord = emplacement.coordonnees;
     const isHovered = this.hoveredEmplacement?._id === emplacement._id;
 
-    if (emplacement.statut === 'occupe') {
+    if (location) {
+      const boutique = location.boutiqueId;
+      const boutiqueId = typeof boutique === 'string' ? boutique : boutique._id;
+      const hasPromo = promoIds.has(boutiqueId);
+      const shopName = typeof boutique === 'string' ? '' : boutique.nom;
+
       // Occupied slot - filled with primary color
       ctx.fillStyle = isHovered
         ? this.getCSSVariable('--color-primary-dark')
@@ -329,15 +549,62 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
       // Border
       ctx.strokeStyle = this.getCSSVariable('--color-primary-dark');
-      ctx.lineWidth = 2;
+      ctx.lineWidth = isHovered ? 3 : 2;
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
 
-      // Draw shop number
-      ctx.fillStyle = this.getCSSVariable('--color-background-primary');
-      ctx.font = 'bold 14px Inter, sans-serif';
+      // Decide text layout: number + name when slot is tall enough
+      const labelColor = this.getCSSVariable('--color-background-primary');
+      ctx.fillStyle = labelColor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(emplacement.numero, coord.x + coord.width / 2, coord.y + coord.height / 2);
+
+      const hasNameRow = coord.height >= 44 && shopName;
+      if (hasNameRow) {
+        // Slot number (top third)
+        const numFontSize = Math.max(9, Math.min(13, coord.height * 0.25, coord.width * 0.3));
+        ctx.font = `bold ${numFontSize}px Inter, sans-serif`;
+        ctx.fillText(
+          emplacement.numero,
+          coord.x + coord.width / 2,
+          coord.y + coord.height * 0.32,
+          coord.width - 6,
+        );
+        // Shop name (bottom portion, smaller)
+        const nameFontSize = Math.max(8, Math.min(11, coord.height * 0.2, coord.width * 0.22));
+        ctx.font = `${nameFontSize}px Inter, sans-serif`;
+        ctx.fillText(
+          shopName,
+          coord.x + coord.width / 2,
+          coord.y + coord.height * 0.65,
+          coord.width - 6,
+        );
+      } else {
+        // Small slot: only number
+        const numFontSize = Math.max(9, Math.min(14, coord.height * 0.4, coord.width * 0.3));
+        ctx.font = `bold ${numFontSize}px Inter, sans-serif`;
+        ctx.fillText(
+          emplacement.numero,
+          coord.x + coord.width / 2,
+          coord.y + coord.height / 2,
+          coord.width - 4,
+        );
+      }
+
+      // Promotion star badge in top-right corner
+      if (hasPromo) {
+        const badgeR = Math.min(10, coord.width * 0.18, coord.height * 0.22);
+        const bx = coord.x + coord.width - badgeR - 2;
+        const by = coord.y + badgeR + 2;
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(7, badgeR * 1.1)}px Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('★', bx, by);
+      }
     } else {
       // Available slot - outlined
       ctx.fillStyle = isHovered
@@ -353,30 +620,24 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
       ctx.strokeRect(coord.x, coord.y, coord.width, coord.height);
       ctx.setLineDash([]);
 
-      // Draw "Available" text
-      ctx.fillStyle = this.getCSSVariable('--color-background-primary');
-      ctx.font = '12px Inter, sans-serif';
+      // Draw "Available" text — use text-secondary so it's visible in both themes
+      ctx.fillStyle = this.getCSSVariable('--color-text-secondary');
+      const emptyFontSize = Math.max(9, Math.min(12, coord.height * 0.25, coord.width * 0.25));
+      ctx.font = `${emptyFontSize}px Inter, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('Vide', coord.x + coord.width / 2, coord.y + coord.height / 2);
+      ctx.fillText('Vide', coord.x + coord.width / 2, coord.y + coord.height / 2, coord.width - 4);
     }
   }
 
   onCanvasClick(event: MouseEvent): void {
     const emplacement = this.getEmplacementAtPoint(event);
-
-    if (emplacement && emplacement.statut === 'occupe' && emplacement.boutiqueId) {
-      // Extract ID from boutiqueId (might be populated object or just ID string)
-      const boutiqueId = typeof emplacement.boutiqueId === 'object'
-        ? emplacement.boutiqueId._id
-        : emplacement.boutiqueId;
-
-      this.boutiqueService.getBoutiqueById(boutiqueId).subscribe(boutique => {
-        if (boutique) {
-          this.selectedBoutique.set(boutique);
-          this.showShopModal.set(true);
-        }
-      });
+    if (emplacement) {
+      const location = this.activeLocationMap().get(emplacement._id);
+      if (location) {
+        this.selectedBoutique.set(location.boutiqueId as BoutiquePopulated);
+        this.showShopModal.set(true);
+      }
     }
   }
 
@@ -385,7 +646,8 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
 
     // Update cursor
     if (this.canvas) {
-      this.canvas.style.cursor = emplacement && emplacement.statut === 'occupe' ? 'pointer' : 'default';
+      const isOccupied = emplacement ? !!this.activeLocationMap().get(emplacement._id) : false;
+      this.canvas.style.cursor = isOccupied ? 'pointer' : 'default';
     }
 
     // Update hover state
@@ -412,6 +674,10 @@ export class InteractiveMapComponent implements AfterViewInit, OnDestroy {
              y >= coord.y &&
              y <= coord.y + coord.height;
     }) || null;
+  }
+
+  toggleLegend(): void {
+    this.legendOpen.update(v => !v);
   }
 
   onEtageSelected(etageId: string): void {

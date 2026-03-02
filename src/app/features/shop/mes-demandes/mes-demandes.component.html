@@ -1,0 +1,49 @@
+<app-page-list-layout
+  icon="pi-map-marker"
+  title="Mes demandes d'emplacement"
+  [subtitle]="demandes().length + ' demande(s) au total'"
+  [loading]="loading()"
+  (refresh)="loadDemandes()">
+
+  <!-- Extra header actions -->
+  <ng-container headerActions>
+    <p-button
+      label="Demander un emplacement"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </ng-container>
+
+  <app-generic-list
+    [data]="demandes()"
+    [loading]="loading()"
+    [config]="listConfig"
+  >
+    <p-button
+      emptyAction
+      label="Demander un emplacement"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </app-generic-list>
+
+  <!-- Dialogs -->
+  <ng-container extraContent>
+    <app-generic-form-dialog
+      [form]="form"
+      [fields]="formFields()"
+      [visible]="dialogVisible()"
+      title="Nouvelle demande d'emplacement"
+      [saving]="saving()"
+      saveLabel="Soumettre la demande"
+      saveIcon="pi-send"
+      [steps]="steps()"
+      [currentStep]="visualStepIndex()"
+      (visibleChange)="$event ? null : closeDialog()"
+      (save)="submitDemande()"
+      (cancel)="closeDialog()"
+      (nextStep)="onNextStep()"
+      (prevStep)="onPrevStep()"
+    />
+  </ng-container>
+</app-page-list-layout>

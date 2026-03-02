@@ -1,18 +1,39 @@
-@if (form()) {
-  <p-dialog
-    [header]="title()"
-    [visible]="visible()"
-    (visibleChange)="$event ? null : onDialogHide()"
-    [modal]="true"
-    [closable]="true"
-    [draggable]="false"
-    [resizable]="false"
-    styleClass="generic-form-dialog"
-    [style]="{ width: '540px' }"
-  >
+<p-dialog
+  [header]="title()"
+  [visible]="visible()"
+  (visibleChange)="$event ? null : onDialogHide()"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="generic-form-dialog"
+  [style]="{ width: '540px' }"
+>
+  <!-- ── Step indicator (multi-step only) ──────────────────────────── -->
+  @if (isMultiStep()) {
+    <div class="step-indicator">
+      @for (s of steps(); track $index) {
+        <div class="step-item" [class.active]="$index === currentStep()" [class.done]="$index < currentStep()">
+          <div class="step-bubble">
+            @if ($index < currentStep()) {
+              <i class="pi pi-check"></i>
+            } @else {
+              {{ $index + 1 }}
+            }
+          </div>
+          <span class="step-label">{{ s.label }}</span>
+        </div>
+        @if ($index < steps().length - 1) {
+          <div class="step-connector" [class.done]="$index < currentStep()"></div>
+        }
+      }
+    </div>
+  }
+
+  @if (form(); as fg) {
     <form
-      [formGroup]="form()!"
-      (ngSubmit)="onSave()"
+      [formGroup]="fg"
+      (ngSubmit)="isLastStep() ? onSave() : onNext()"
       class="generic-form"
       autocomplete="off"
       novalidate
@@ -37,10 +58,207 @@
 
       <!-- Extra projected content (e.g. a preview section) -->
       <ng-content />
-    </form>
 
-    <ng-template pTemplate="footer">
-      <div class="dialog-footer">
+      <!-- ── Field template ─────────────────────────────────────── -->
+      <!-- Declared INSIDE [formGroup] so formControlName directives  -->
+      <!-- can resolve ControlContainer at the declaration site.      -->
+      <ng-template #fieldTpl let-field>
+        @if (field.type === 'label') {
+          <p class="form-section-label">{{ field.label }}</p>
+        } @else {
+        <div class="form-group" [class.form-group--checkbox]="field.type === 'checkbox'">
+          @if (field.type !== 'checkbox') {
+            <label [for]="'gfd-' + field.key" class="form-label">
+              {{ field.label }}
+              @if (field.required) {
+                <span class="required" aria-hidden="true">*</span>
+              }
+            </label>
+          }
+
+          @switch (field.type) {
+
+            <!-- text -->
+            @case ('text') {
+              <input
+                pInputText
+                [id]="'gfd-' + field.key"
+                [formControlName]="field.key"
+                [placeholder]="field.placeholder ?? ''"
+                class="w-full"
+                autocomplete="off"
+                [class.ng-invalid]="isFieldInvalid(field.key)"
+                [attr.aria-invalid]="isFieldInvalid(field.key)"
+                [attr.aria-required]="field.required ?? false"
+              />
+            }
+
+            <!-- textarea -->
+            @case ('textarea') {
+              <textarea
+                pTextarea
+                [id]="'gfd-' + field.key"
+                [formControlName]="field.key"
+                [placeholder]="field.placeholder ?? ''"
+                class="w-full"
+                [rows]="field.rows ?? 3"
+                [autoResize]="true"
+                autocomplete="off"
+              ></textarea>
+            }
+
+            <!-- select -->
+            @case ('select') {
+              <p-select
+                [inputId]="'gfd-' + field.key"
+                [formControlName]="field.key"
+                [options]="field.options ?? []"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="field.placeholder ?? 'Choisir…'"
+                styleClass="w-full"
+                appendTo="body"
+                [class.ng-invalid]="isFieldInvalid(field.key)"
+                [attr.aria-required]="field.required ?? false"
+              />
+            }
+
+            <!-- color -->
+            @case ('color') {
+              <p-inputgroup class="w-full">
+                <p-inputgroup-addon>
+                  <p-colorpicker
+                    [ngModel]="colorPickerValues()[field.key] || '1976D2'"
+                    (ngModelChange)="onColorPickerChange(field.key, $event)"
+                    [ngModelOptions]="{ standalone: true }"
+                    [inline]="false"
+                    appendTo="body"
+                    [attr.aria-label]="'Sélecteur de couleur pour ' + field.label"
+                  />
+                </p-inputgroup-addon>
+                <input
+                  pInputText
+                  [id]="'gfd-' + field.key"
+                  [formControlName]="field.key"
+                  [placeholder]="field.placeholder ?? '#RRGGBB'"
+                  [class.ng-invalid]="isFieldInvalid(field.key)"
+                  [attr.aria-invalid]="isFieldInvalid(field.key)"
+                  [attr.aria-required]="field.required ?? false"
+                  [attr.aria-label]="'Valeur hexadécimale pour ' + field.label"
+                />
+              </p-inputgroup>
+            }
+
+            <!-- number -->
+            @case ('number') {
+              <p-inputnumber
+                [inputId]="'gfd-' + field.key"
+                [formControlName]="field.key"
+                [placeholder]="field.placeholder ?? ''"
+                [min]="field.min"
+                [max]="field.max"
+                [step]="field.step ?? 1"
+                styleClass="w-full"
+                [inputStyleClass]="isFieldInvalid(field.key) ? 'ng-invalid' : ''"
+                [attr.aria-required]="field.required ?? false"
+              />
+            }
+
+            <!-- date -->
+            @case ('date') {
+              <p-datepicker
+                [inputId]="'gfd-' + field.key"
+                [formControlName]="field.key"
+                [placeholder]="field.placeholder ?? 'jj/mm/aaaa'"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                appendTo="body"
+                styleClass="w-full"
+                [inputStyleClass]="isFieldInvalid(field.key) ? 'ng-invalid w-full' : 'w-full'"
+                [attr.aria-required]="field.required ?? false"
+              />
+            }
+
+            <!-- checkbox -->
+            @case ('checkbox') {
+              <div class="checkbox-wrapper">
+                <p-checkbox
+                  [formControlName]="field.key"
+                  [binary]="true"
+                  [inputId]="'gfd-' + field.key"
+                />
+                <label [for]="'gfd-' + field.key" class="checkbox-label">
+                  {{ field.placeholder ?? field.label }}
+                </label>
+              </div>
+            }
+
+            <!-- radio -->
+            @case ('radio') {
+              <div class="radio-group" role="radiogroup" [attr.aria-labelledby]="'gfd-lbl-' + field.key">
+                @for (opt of (field.options ?? []); track opt.value) {
+                  <div class="radio-option">
+                    <p-radiobutton
+                      [formControlName]="field.key"
+                      [inputId]="'gfd-' + field.key + '-' + opt.value"
+                      [value]="opt.value"
+                    />
+                    <label [for]="'gfd-' + field.key + '-' + opt.value">{{ opt.label }}</label>
+                  </div>
+                }
+              </div>
+            }
+
+          }
+
+          @if (isFieldInvalid(field.key)) {
+            <small class="field-error" role="alert">{{ getFieldError(field.key) }}</small>
+          }
+        </div>
+        }
+      </ng-template>
+    </form>
+  }
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      @if (isMultiStep()) {
+        <!-- Multi-step footer -->
+        <p-button
+          label="Annuler"
+          icon="pi pi-times"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="onCancel()"
+        />
+        <div class="step-nav-buttons">
+          @if (!isFirstStep()) {
+            <p-button
+              label="Précédent"
+              icon="pi pi-arrow-left"
+              [outlined]="true"
+              severity="secondary"
+              (onClick)="onPrev()"
+            />
+          }
+          @if (!isLastStep()) {
+            <p-button
+              label="Suivant"
+              iconPos="right"
+              icon="pi pi-arrow-right"
+              (onClick)="onNext()"
+            />
+          } @else {
+            <p-button
+              [label]="saveLabel()"
+              [icon]="'pi ' + saveIcon()"
+              [loading]="saving()"
+              (onClick)="onSave()"
+            />
+          }
+        </div>
+      } @else {
+        <!-- Single-step footer (original behaviour) -->
         <p-button
           label="Annuler"
           icon="pi pi-times"
@@ -54,158 +272,7 @@
           [loading]="saving()"
           (onClick)="onSave()"
         />
-      </div>
-    </ng-template>
-  </p-dialog>
-}
-
-<!-- ── Field template ─────────────────────────────────────── -->
-<ng-template #fieldTpl let-field>
-  <div class="form-group">
-    <label [for]="'gfd-' + field.key" class="form-label">
-      {{ field.label }}
-      @if (field.required) {
-        <span class="required" aria-hidden="true">*</span>
       }
-    </label>
-
-    @switch (field.type) {
-
-      <!-- text -->
-      @case ('text') {
-        <input
-          pInputText
-          [id]="'gfd-' + field.key"
-          [formControlName]="field.key"
-          [placeholder]="field.placeholder ?? ''"
-          class="w-full"
-          autocomplete="off"
-          [class.ng-invalid]="isFieldInvalid(field.key)"
-          [attr.aria-invalid]="isFieldInvalid(field.key)"
-          [attr.aria-required]="field.required ?? false"
-        />
-      }
-
-      <!-- textarea -->
-      @case ('textarea') {
-        <textarea
-          pTextarea
-          [id]="'gfd-' + field.key"
-          [formControlName]="field.key"
-          [placeholder]="field.placeholder ?? ''"
-          class="w-full"
-          [rows]="field.rows ?? 3"
-          [autoResize]="true"
-          autocomplete="off"
-        ></textarea>
-      }
-
-      <!-- select -->
-      @case ('select') {
-        <p-select
-          [inputId]="'gfd-' + field.key"
-          [formControlName]="field.key"
-          [options]="field.options ?? []"
-          optionLabel="label"
-          optionValue="value"
-          [placeholder]="field.placeholder ?? 'Choisir…'"
-          styleClass="w-full"
-          appendTo="body"
-          [class.ng-invalid]="isFieldInvalid(field.key)"
-          [attr.aria-required]="field.required ?? false"
-        />
-      }
-
-      <!-- color -->
-      @case ('color') {
-        <p-inputgroup class="w-full">
-          <p-inputgroup-addon>
-            <p-colorpicker
-              [ngModel]="colorPickerValues()[field.key] || '1976D2'"
-              (ngModelChange)="onColorPickerChange(field.key, $event)"
-              [ngModelOptions]="{ standalone: true }"
-              [inline]="false"
-              appendTo="body"
-              [attr.aria-label]="'Sélecteur de couleur pour ' + field.label"
-            />
-          </p-inputgroup-addon>
-          <input
-            pInputText
-            [id]="'gfd-' + field.key"
-            [formControlName]="field.key"
-            [placeholder]="field.placeholder ?? '#RRGGBB'"
-            [class.ng-invalid]="isFieldInvalid(field.key)"
-            [attr.aria-invalid]="isFieldInvalid(field.key)"
-            [attr.aria-required]="field.required ?? false"
-            [attr.aria-label]="'Valeur hexadécimale pour ' + field.label"
-          />
-        </p-inputgroup>
-      }
-
-      <!-- number -->
-      @case ('number') {
-        <p-inputnumber
-          [inputId]="'gfd-' + field.key"
-          [formControlName]="field.key"
-          [placeholder]="field.placeholder ?? ''"
-          [min]="field.min"
-          [max]="field.max"
-          [step]="field.step ?? 1"
-          styleClass="w-full"
-          [inputStyleClass]="isFieldInvalid(field.key) ? 'ng-invalid' : ''"
-          [attr.aria-required]="field.required ?? false"
-        />
-      }
-
-      <!-- date -->
-      @case ('date') {
-        <p-datepicker
-          [inputId]="'gfd-' + field.key"
-          [formControlName]="field.key"
-          [placeholder]="field.placeholder ?? 'jj/mm/aaaa'"
-          dateFormat="dd/mm/yy"
-          [showIcon]="true"
-          appendTo="body"
-          styleClass="w-full"
-          [inputStyleClass]="isFieldInvalid(field.key) ? 'ng-invalid w-full' : 'w-full'"
-          [attr.aria-required]="field.required ?? false"
-        />
-      }
-
-      <!-- checkbox -->
-      @case ('checkbox') {
-        <div class="checkbox-wrapper">
-          <p-checkbox
-            [formControlName]="field.key"
-            [binary]="true"
-            [inputId]="'gfd-' + field.key"
-          />
-          <label [for]="'gfd-' + field.key" class="checkbox-label">
-            {{ field.placeholder ?? field.label }}
-          </label>
-        </div>
-      }
-
-      <!-- radio -->
-      @case ('radio') {
-        <div class="radio-group" role="radiogroup" [attr.aria-labelledby]="'gfd-lbl-' + field.key">
-          @for (opt of (field.options ?? []); track opt.value) {
-            <div class="radio-option">
-              <p-radiobutton
-                [formControlName]="field.key"
-                [inputId]="'gfd-' + field.key + '-' + opt.value"
-                [value]="opt.value"
-              />
-              <label [for]="'gfd-' + field.key + '-' + opt.value">{{ opt.label }}</label>
-            </div>
-          }
-        </div>
-      }
-
-    }
-
-    @if (isFieldInvalid(field.key)) {
-      <small class="field-error" role="alert">{{ getFieldError(field.key) }}</small>
-    }
-  </div>
-</ng-template>
+    </div>
+  </ng-template>
+</p-dialog>

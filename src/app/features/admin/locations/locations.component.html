@@ -1,0 +1,13 @@
+<app-page-list-layout
+  icon="pi-map-marker"
+  title="Locations d'emplacements"
+  [subtitle]="locations().length + ' location(s) enregistrée(s)'"
+  [loading]="loading()"
+  (refresh)="loadLocations()">
+
+  <app-generic-list
+    [data]="locations()"
+    [loading]="loading()"
+    [config]="listConfig"
+  />
+</app-page-list-layout>
