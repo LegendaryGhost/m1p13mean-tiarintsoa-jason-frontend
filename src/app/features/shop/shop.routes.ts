@@ -1,16 +1,10 @@
 import { Routes } from '@angular/router';
-import { Component } from '@angular/core';
 import { MesDemandesComponent } from './mes-demandes/mes-demandes.component';
 import { MesBoutiquesComponent } from './mes-boutiques/mes-boutiques.component';
-
-@Component({
-  standalone: true,
-  template: `<h1>Boutique Dashboard</h1><p>Gérez vos produits et promotions ici.</p>`
-})
-class ShopHomeComponent {}
+import { ShopDashboardComponent } from './dashboard/shop-dashboard.component';
 
 export const SHOP_ROUTES: Routes = [
-  { path: '', component: ShopHomeComponent },
+  { path: '', component: ShopDashboardComponent },
   { path: 'mes-boutiques', component: MesBoutiquesComponent },
   { path: 'mes-demandes', component: MesDemandesComponent },
   {
