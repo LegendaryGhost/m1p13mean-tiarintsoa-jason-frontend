@@ -34,7 +34,7 @@ interface DashboardChartColors {
         <div class="dashboard-title">
           <i class="pi pi-chart-line" aria-hidden="true"></i>
           <div>
-            <h1>Dashboard boutique</h1>
+            <h1>Tableau de bord de la boutique</h1>
             <p>Suivi des visites et de vos produits</p>
           </div>
         </div>
