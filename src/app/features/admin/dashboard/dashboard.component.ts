@@ -83,7 +83,7 @@ interface DashboardChartColors {
             <div class="section-title-row">
               <div>
                 <h2>Nombre de visiteurs</h2>
-                <p>Évolution sur {{ periodDays() }} jours</p>
+                <p>{{ visitorsPeriodLabel() }}</p>
               </div>
 
               <div class="period-selector" role="group" aria-label="Sélection de la période">
@@ -649,5 +649,17 @@ export class DashboardComponent implements OnInit {
   readonly visitorPeak = computed(() => {
     const series = this.visitorSeries();
     return series.length ? Math.max(...series.map((point) => point.value)) : 0;
+  });
+
+  readonly visitorsPeriodLabel = computed(() => {
+    if (this.periodDays() === 7) {
+      return '7 derniers jours';
+    }
+
+    if (this.periodDays() === 30) {
+      return '30 derniers jours';
+    }
+
+    return `Évolution sur ${this.periodDays()} jours`;
   });
 }

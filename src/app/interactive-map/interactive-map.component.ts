@@ -635,6 +635,14 @@ export class InteractiveMapComponent implements OnDestroy {
     if (emplacement) {
       const location = this.activeLocationMap().get(emplacement._id);
       if (location) {
+        const boutique = location.boutiqueId;
+        const boutiqueId = typeof boutique === 'string' ? boutique : boutique._id;
+
+        this.visitTrackingService.trackBoutiqueVisit(boutiqueId).subscribe({
+          error: () => {
+          },
+        });
+
         this.selectedBoutique.set(location.boutiqueId as BoutiquePopulated);
         this.showShopModal.set(true);
       }
