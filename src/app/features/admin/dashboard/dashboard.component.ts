@@ -426,11 +426,7 @@ export class DashboardComponent implements OnInit {
 
   readonly visitorSeries = signal<VisitorDataPoint[]>([]);
 
-  readonly topShops = signal<ShopVisitStat[]>([
-    { name: 'Boutique Élégance', visits: 1840 },
-    { name: 'Tech Horizon', visits: 1625 },
-    { name: 'Maison Gourmande', visits: 1498 },
-  ]);
+  readonly topShops = signal<ShopVisitStat[]>([]);
 
   readonly slotChartData = computed<ChartData<'doughnut'>>(() => {
     const colors = this.chartColors();
@@ -591,6 +587,7 @@ export class DashboardComponent implements OnInit {
         this.periodDays.set(stats.visitors.periodDays);
         this.freeSlots.set(stats.slots.free);
         this.occupiedSlots.set(stats.slots.occupied);
+        this.topShops.set(stats.topBoutiques ?? []);
 
         this.visitorSeries.set(
           stats.visitors.series.map((item) => ({
@@ -603,6 +600,7 @@ export class DashboardComponent implements OnInit {
         this.visitorSeries.set([]);
         this.freeSlots.set(0);
         this.occupiedSlots.set(0);
+        this.topShops.set([]);
       },
     });
   }

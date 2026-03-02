@@ -22,9 +22,15 @@ interface DashboardSlotsStats {
   occupancyRate: number;
 }
 
+interface DashboardTopBoutique {
+  name: string;
+  visits: number;
+}
+
 export interface DashboardAdminStats {
   visitors: DashboardVisitorsStats;
   slots: DashboardSlotsStats;
+  topBoutiques: DashboardTopBoutique[];
 }
 
 @Injectable({
