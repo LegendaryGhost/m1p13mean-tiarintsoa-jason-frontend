@@ -99,7 +99,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit {
     },
     {
       key: 'prix',
-      label: 'Prix (€)',
+      label: 'Prix (MGA)',
       type: 'number',
       required: true,
       min: 0,
@@ -145,7 +145,7 @@ export class ProduitsComponent implements OnInit, AfterViewInit {
         cellType: 'text',
         formatter: (row) =>
           row.prix != null
-            ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(row.prix)
+            ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MGA' }).format(row.prix)
             : '-',
       },
       {

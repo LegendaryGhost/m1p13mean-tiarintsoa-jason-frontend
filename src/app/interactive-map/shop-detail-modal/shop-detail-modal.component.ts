@@ -591,7 +591,7 @@ export class ShopDetailModalComponent {
   }
 
   formatPrice(prix: number): string {
-    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(prix);
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'MGA' }).format(prix);
   }
 
   getImageSrc(image: string | null | undefined): string {
