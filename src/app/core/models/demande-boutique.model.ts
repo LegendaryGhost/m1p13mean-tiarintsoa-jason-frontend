@@ -71,13 +71,18 @@ export function hasPopulatedEmplacement(
 
 /** Payload sent by the shop client when creating a request */
 export interface CreateDemandePayload {
-  nomBoutique: string;
+  /** When set, shop info is copied from this existing boutique (owned by the user). */
+  boutiqueExistanteId?: string;
+  /** Required when boutiqueExistanteId is absent */
+  nomBoutique?: string;
   description?: string;
-  categorieId: string;
-  heureOuverture: string;
-  heureFermeture: string;
+  categorieId?: string;
+  logo?: string;
+  heureOuverture?: string;
+  heureFermeture?: string;
   joursOuverture?: string[];
   emplacementSouhaiteId: string;
   dateDebutSouhaitee: string;    // ISO 8601
   dateFinSouhaitee?: string;     // ISO 8601 (optional)
 }
+

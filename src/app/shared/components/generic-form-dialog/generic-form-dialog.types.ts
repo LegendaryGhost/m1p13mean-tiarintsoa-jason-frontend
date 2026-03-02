@@ -14,6 +14,12 @@ export interface SelectOption {
   value: any;
 }
 
+/** Defines a single step in a multi-step dialog. */
+export interface StepDef {
+  label: string;
+  icon?: string;
+}
+
 export interface FieldDef {
   /** FormGroup control key */
   key: string;
@@ -34,4 +40,10 @@ export interface FieldDef {
   min?: number;
   max?: number;
   step?: number;
+  /**
+   * When the dialog is in multi-step mode, only fields whose
+   * `stepIndex` matches the current step are rendered.
+   * Fields without `stepIndex` are always rendered (single-step behaviour).
+   */
+  stepIndex?: number;
 }

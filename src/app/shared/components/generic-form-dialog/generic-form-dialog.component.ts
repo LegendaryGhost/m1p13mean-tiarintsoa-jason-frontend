@@ -27,7 +27,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 
-import { FieldDef } from './generic-form-dialog.types';
+import { FieldDef, StepDef } from './generic-form-dialog.types';
 
 @Component({
   selector: 'app-generic-form-dialog',
@@ -61,17 +61,37 @@ export class GenericFormDialogComponent implements OnDestroy {
   saveLabel = input('Enregistrer');
   saveIcon = input('pi-check');
 
+  /**
+   * When provided (length > 1), the dialog renders a step indicator and
+   * step-navigation buttons instead of a plain Cancel + Save footer.
+   */
+  steps = input<StepDef[]>([]);
+
+  /** Zero-based index of the currently active step (managed by the parent). */
+  currentStep = input(0);
+
   visibleChange = output<boolean>();
   save = output<void>();
   cancel = output<void>();
+  /** Emitted when the user clicks "Suivant" — parent advances currentStep. */
+  nextStep = output<void>();
+  /** Emitted when the user clicks "Précédent" — parent decrements currentStep. */
+  prevStep = output<void>();
+
+  /** Whether the dialog is in multi-step mode. */
+  isMultiStep = computed(() => this.steps().length > 1);
+  isFirstStep = computed(() => this.currentStep() === 0);
+  isLastStep  = computed(
+    () => !this.isMultiStep() || this.currentStep() === this.steps().length - 1
+  );
 
   /** Color picker values — stripped hex (without #) keyed by field key */
   colorPickerValues = signal<Record<string, string>>({});
 
   /**
-   * Groups fields by rowGroup. Fields without a rowGroup get their own
-   * single-item group. Returns an array of rows, each row being an
-   * array of FieldDefs.
+   * Groups fields by rowGroup for rendering.
+   * The parent is responsible for passing only the fields that belong to the
+   * current step — this component renders everything it receives.
    */
   fieldRows = computed<FieldDef[][]>(() => {
     const rows: FieldDef[][] = [];
@@ -136,6 +156,14 @@ export class GenericFormDialogComponent implements OnDestroy {
   onCancel(): void {
     this.visibleChange.emit(false);
     this.cancel.emit();
+  }
+
+  onNext(): void {
+    this.nextStep.emit();
+  }
+
+  onPrev(): void {
+    this.prevStep.emit();
   }
 
   isFieldInvalid(key: string): boolean {
